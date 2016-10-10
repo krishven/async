@@ -1,0 +1,2 @@
+numCoordinators=6
+numClients=1
