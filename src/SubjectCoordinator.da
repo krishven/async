@@ -1,0 +1,14 @@
+client = import_da('Client')
+class SubjectCoordinator(process):
+    def setup(clientProcId:client.Client,configFile:str):
+        self.clearFlag=False
+
+    def run():
+        output("hello SubCo!")
+        await(self.clearFlag)
+
+    def receive(msg=(reqObject,), from_=clientProcId):
+        output("Got hello from client:",reqObject.clientId)
+        self.clearFlag=True
+        send((False,), to=reqObject.clientId)
+    

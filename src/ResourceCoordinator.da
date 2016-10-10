@@ -1,0 +1,5 @@
+class ResourceCoordinator(process):
+    def setup(p:Pong, nrounds:int): pass
+
+    def run():
+        output("hello ResCo!")

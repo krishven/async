@@ -1,0 +1,51 @@
+
+import sys
+import os
+#common = import_da('common')
+subject = import_da('SubjectCoordinator') 
+resource = import_da('ResourceCoordinator')
+client = import_da('Client')
+
+#configHashMap={}
+subProcessHashMap={}
+resProcessHashMap={}
+cliProcessHashMap={}
+configHashMap={}
+def readConfigFile(fileName):
+    with open(fileName) as f:
+            lines = f.read().splitlines()
+    for line in lines:
+        temp = line.split("=")
+        configHashMap[temp[0]]=temp[1] 
+
+def main():
+    config(clock='Lamport')
+    n=1
+    readConfigFile(sys.argv[1])
+    numCoordinators = int(configHashMap['numCoordinators'])
+    
+    subCoProcIds = new(subject.SubjectCoordinator, num = int(numCoordinators/2))
+    resCoProcIds = new(resource.ResourceCoordinator, num = numCoordinators - int(numCoordinators/2) )
+    clientProcIds = new(client.Client, num=int(configHashMap['numClients']))
+ #   setup(subCoProcIds
+    i=0
+    for procId in subCoProcIds:
+        subProcessHashMap[i]=procId
+        i+=1
+
+    i=0
+    for procId in resCoProcIds:
+        resProcessHashMap[i]=procId
+        i+=1
+
+
+    i=0
+    for procId in clientProcIds:
+        cliProcessHashMap[i]=procId
+        i+=1
+
+    setup(subCoProcIds,(clientProcIds,sys.argv[1],)) 
+    setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,sys.argv[1],))    
+    start(subCoProcIds)
+    start(resCoProcIds)
+    start(clientProcIds)

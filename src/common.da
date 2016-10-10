@@ -1,0 +1,11 @@
+import sys
+import os
+
+configHashMap={}
+class AppRequest():
+    def __init__(self, subId,resId,clientProcId):
+        self.subId = subId
+        self.resId = resId
+        self.subCoId = None
+        self.resCoId = None
+        self.clientId = clientProcId

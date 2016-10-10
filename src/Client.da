@@ -1,0 +1,24 @@
+common = import_da('common')
+class Client(process):
+    def setup(configHashMap:dict,subCoIdMap:dict,resCoIdMap:dict,configFile:str): 
+        self.resumeFlag=False 
+        self.appReq=None
+        pass #print("poda:",subCoId)
+
+    def run():
+        output("hello Client!")
+        #readConfigFile(sys.argv[1])
+        #print ("myid: ",self.id)
+        subId = int(configHashMap['subjectId'])
+        resId = int(configHashMap['resourceId'])
+        numCoordinators = int(configHashMap['numCoordinators'])
+        appReq = common.AppRequest(subId,resId,self.id)
+        appReq.subCoId = subCoIdMap[subId%(numCoordinators/2)]
+        appReq.resCoId = resCoIdMap[resId%(numCoordinators - numCoordinators/2)]
+        #self.subCoId=appReq.subCoId
+        send((appReq,),to=appReq.subCoId)
+        await(self.resumeFlag)
+        
+    def receive(msg=(result,), from_=appReq.subCoId):
+        output("Got Response from subco:" , result)
+        self.resumeFlag=True
