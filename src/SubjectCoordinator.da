@@ -1,4 +1,6 @@
 common = import_da('common')
+requests = {}
+
 class SubjectCoordinator(process):
     def setup():pass
 
@@ -8,6 +10,7 @@ class SubjectCoordinator(process):
 
     def receive(msg=(reqObject,), from_=recvProcId):
     	if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
+    		requests[reqObject.uniqueId] = reqObject
     		if(isTentativeUpdate()):
     			pass
     		else:
