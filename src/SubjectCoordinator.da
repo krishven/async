@@ -1,14 +1,12 @@
-client = import_da('Client')
 common = import_da('common')
 class SubjectCoordinator(process):
-    def setup(clientProcId:client.Client,configFile:str):
-        self.clearFlag=False
+    def setup():pass
 
     def run():
         output("hello SubCo!")
-        await(self.clearFlag)
+        await(False)
 
-    def receive(msg=(reqObject,), from_=clientProcId):
+    def receive(msg=(reqObject,), from_=recvProcId):
     	if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
     		if(isTentativeUpdate()):
     			pass

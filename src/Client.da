@@ -9,18 +9,18 @@ class Client(process):
         output("hello Client!")
         #readConfigFile(sys.argv[1])
         #print ("myid: ",self.id)
-        subId = int(configHashMap['subjectId'])
-        resId = int(configHashMap['resourceId'])
+        subId = configHashMap['subjectId']
+        resId = configHashMap['resourceId']
         numCoordinators = int(configHashMap['numCoordinators'])
         appReq = common.AppRequest(subId,resId,self.id)
-        appReq.subCoId = subCoIdMap[subId%(numCoordinators/2)]
-        appReq.resCoId = resCoIdMap[resId%(numCoordinators - numCoordinators/2)]
+        appReq.subCoId = subCoIdMap[int(subId)%(numCoordinators/2)]
+        appReq.resCoId = resCoIdMap[int(resId)%(numCoordinators - numCoordinators/2)]
         appReq.msgType = common.MsgType.POLICY_EVAL_REQUEST
         print(appReq.msgType)
         #self.subCoId=appReq.subCoId
         send((appReq,),to=appReq.subCoId)
         await(self.resumeFlag)
         
-    def receive(msg=(result,), from_=appReq.subCoId):
+    def receive(msg=(result,), from_= subCoId):
         output("Got Response from subco:" ,result)
         self.resumeFlag=True

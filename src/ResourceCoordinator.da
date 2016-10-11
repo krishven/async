@@ -1,7 +1,7 @@
 SubjectCoordinator = import_da('SubjectCoordinator')
 Worker = import_da('Worker')
 class ResourceCoordinator(process):
-    def setup(subCoId:SubjectCoordinator, workerId:Worker,configHasHMap:dict): 
+    def setup(workerId:Worker,configHasHMap:dict): 
     	self.clearFlag=False
 
     def run():
