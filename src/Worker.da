@@ -34,8 +34,9 @@ class Worker(process):
     	send((reqObject,),to=reqObject.subCoId)
 
     def evaluatePolicyRequest(reqObject):
-    	tree = ET.parse('../config/policy-example.xml')
+        tree = ET.parse('../config/policy-example.xml')
         root = tree.getroot()
+        result = False
         for rule in root.iter('rule'):
             #print('rule', rule.attrib['name'])
             temp = database[reqObject.subId]
@@ -43,6 +44,8 @@ class Worker(process):
             sc=rule.find('subjectCondition')
             for attrName, attrValue in sc.items():
                 #print "%s = %s" % (attrName, attrValue)
+                if attrName not in temp:
+                    return False
                 subcond = subcond and temp[attrName] == attrValue
 
             temp = database[reqObject.resId]
@@ -50,6 +53,8 @@ class Worker(process):
             rc=rule.find('resourceCondition')
             for attrName, attrValue in rc.items():
                 #print "%s = %s" % (attrName, attrValue)
+                if attrName not in temp:
+                    return False
                 if "<" not in attrValue and ">" not in attrValue:
                     rescond = rescond and temp[attrName] == attrValue
                 elif "<" in attrValue:
@@ -57,7 +62,7 @@ class Worker(process):
                 elif ">" in attrValue:
                     rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
 
-            return subcond and rescond
+            result = result or (subcond and rescond)
 
             #print('resource condition', rc.attrib)
             #act=rule.find('action')
@@ -69,3 +74,4 @@ class Worker(process):
             #if ru != None:
                 #print('resource update', ru.attrib)
             #print()
+        return result
