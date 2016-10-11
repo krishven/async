@@ -26,10 +26,11 @@ def initDB():
 def main():
     tree = ET.parse('../config/policy-example.xml')
     root = tree.getroot()
-    result = False
+    result = {}
+    result['value'] = False
     for rule in root.iter('rule'):
         #print('rule', rule.attrib['name'])
-        temp = database['6']
+        temp = database['1']
         subcond = True
         sc=rule.find('subjectCondition')
         for attrName, attrValue in sc.items():
@@ -38,7 +39,7 @@ def main():
                 print('not exists')
             subcond = subcond and temp[attrName] == attrValue
 
-        temp = database['4']
+        temp = database['3']
         rescond = True
         rc=rule.find('resourceCondition')
         for attrName, attrValue in rc.items():
@@ -51,23 +52,35 @@ def main():
                 rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
 
         print(subcond and rescond)
-        result = result or (subcond and rescond)
+        result['value'] = result['value'] or (subcond and rescond)
+
+        if result['value'] == True:
+            su=rule.find('subjectUpdate')
+            if su != None:
+                for attrName, attrValue in su.items():
+                    result['type'] = 'subject'
+                    result['attrName'] = attrName
+                    result['attrValue'] = attrValue
+                    break
+            ru=rule.find('resourceUpdate')
+            if ru != None:
+                for attrName, attrValue in ru.items():
+                    result['type'] = 'resource'
+                    result['attrName'] = attrName
+                    result['attrValue'] = attrValue
+                    break
+            break
 
         #print('resource condition', rc.attrib)
-        act=rule.find('action')
+        #act=rule.find('action')
         #print('action', act.attrib)
-        su=rule.find('subjectUpdate')
-        #if su != None:
-            #print('subject update', su.attrib)
-        ru=rule.find('resourceUpdate')
-        #if ru != None:
-            #print('resource update', ru.attrib)
         #print()
 
-    print('Final ',result)
+    print('\n')
+    print(result['value'])
+    print(result['type'])
+    print(result['attrName'])
+    print(result['attrValue'])
 
-
-#initDB()
-#main()
-uid = uuid.uuid4().hex
-print(type(uid))
+initDB()
+main()

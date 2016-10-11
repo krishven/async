@@ -3,6 +3,7 @@ common = import_da('common')
 
 import xml.etree.ElementTree as ET
 database = {}
+result = {}
 
 class Worker(process):
 	def setup(configHasHMap:dict): pass
@@ -36,7 +37,8 @@ class Worker(process):
 	def evaluatePolicyRequest(reqObject):
 		tree = ET.parse('../config/policy-example.xml')
 		root = tree.getroot()
-		result = False
+		result = {}
+		result['value'] = False
 		for rule in root.iter('rule'):
 			#print('rule', rule.attrib['name'])
 			temp = database[reqObject.subId]
@@ -62,7 +64,24 @@ class Worker(process):
 				elif ">" in attrValue:
 					rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
 
-			result = result or (subcond and rescond)
+			result['value'] = result['value'] or (subcond and rescond)
+
+			if result['value'] == True:
+				su=rule.find('subjectUpdate')
+				if su != None:
+					for attrName, attrValue in su.items():
+						result['type'] = 'subject'
+						result['attrName'] = attrName
+						result['attrValue'] = attrValue
+						break
+				ru=rule.find('resourceUpdate')
+				if ru != None:
+					for attrName, attrValue in ru.items():
+						result['type'] = 'resource'
+						result['attrName'] = attrName
+						result['attrValue'] = attrValue
+						break
+				break
 
 			#print('resource condition', rc.attrib)
 			#act=rule.find('action')
