@@ -1,0 +1,17 @@
+SubjectCoordinator = import_da('SubjectCoordinator')
+common = import_da('common')
+class Worker(process):
+    def setup(configHasHMap:dict): pass
+
+    def run():
+        output("hello Worker!")
+        await(False)
+
+    def receive(msg=(reqObject,), from_=subCoId):
+    	output("Received from ResCo")
+    	reqObject.result = evaluatePolicyRequest(reqObject)
+    	reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
+    	send((reqObject,),to=reqObject.subCoId)
+
+    def evaluatePolicyRequest(reqObject):
+    	return True

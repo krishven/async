@@ -5,6 +5,7 @@ import os
 subject = import_da('SubjectCoordinator') 
 resource = import_da('ResourceCoordinator')
 client = import_da('Client')
+worker = import_da('Worker')
 
 #configHashMap={}
 subProcessHashMap={}
@@ -27,6 +28,8 @@ def main():
     subCoProcIds = new(subject.SubjectCoordinator, num = int(numCoordinators/2))
     resCoProcIds = new(resource.ResourceCoordinator, num = numCoordinators - int(numCoordinators/2) )
     clientProcIds = new(client.Client, num=int(configHashMap['numClients']))
+    workerProcIds = new(worker.Worker, num=int(configHashMap['numWorkers']))
+
  #   setup(subCoProcIds
     i=0
     for procId in subCoProcIds:
@@ -45,7 +48,9 @@ def main():
         i+=1
 
     setup(subCoProcIds,(clientProcIds,sys.argv[1],)) 
+    setup(resCoProcIds,(subCoProcIds,workerProcIds,configHashMap))
     setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,sys.argv[1],))    
     start(subCoProcIds)
     start(resCoProcIds)
     start(clientProcIds)
+    start(workerProcIds,(configHashMap,))

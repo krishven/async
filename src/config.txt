@@ -2,3 +2,4 @@ numCoordinators=6
 numClients=1
 subjectId=3
 resourceId=6
+numWorkers=1

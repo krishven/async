@@ -1,7 +1,10 @@
-import sys
-import os
+import time
+from enum import Enum
 
-configHashMap={}
+class MsgType(Enum):
+	POLICY_EVAL_REQUEST=1,
+	POLICY_EVAL_RESULT=2
+
 class AppRequest():
     def __init__(self, subId,resId,clientProcId):
         self.subId = subId
@@ -9,3 +12,9 @@ class AppRequest():
         self.subCoId = None
         self.resCoId = None
         self.clientId = clientProcId
+        self.uniqueId=None
+        self.isTentaive=False
+        self.timestamp=time.time()
+        self.result=False
+        self.msgType=MsgType.POLICY_EVAL_REQUEST
+

@@ -1,5 +1,14 @@
+SubjectCoordinator = import_da('SubjectCoordinator')
+Worker = import_da('Worker')
 class ResourceCoordinator(process):
-    def setup(p:Pong, nrounds:int): pass
+    def setup(subCoId:SubjectCoordinator, workerId:Worker,configHasHMap:dict): 
+    	self.clearFlag=False
 
     def run():
-        output("hello ResCo!")
+        output("hello Resco!")
+        await(self.clearFlag)
+
+    def receive(msg=(reqObject,), from_=subCoId):
+    	print("Received from SubCo:",reqObject.subCoId)
+    	send((reqObject,),to=workerId)
+

@@ -1,4 +1,5 @@
 client = import_da('Client')
+common = import_da('common')
 class SubjectCoordinator(process):
     def setup(clientProcId:client.Client,configFile:str):
         self.clearFlag=False
@@ -8,7 +9,17 @@ class SubjectCoordinator(process):
         await(self.clearFlag)
 
     def receive(msg=(reqObject,), from_=clientProcId):
-        output("Got hello from client:",reqObject.clientId)
-        self.clearFlag=True
-        send((False,), to=reqObject.clientId)
-    
+    	if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
+    		if(isTentativeUpdate()):
+    			pass
+    		else:
+    			print("Send to resco:",reqObject.resCoId)
+    			send((reqObject,), to=reqObject.resCoId)
+
+    	elif(reqObject.msgType == common.MsgType.POLICY_EVAL_RESULT):
+    		print("res is:",reqObject.result)
+    		send((reqObject.result,),to=reqObject.clientId)
+    	else:
+    		print("Invalid msg")			
+    def isTentativeUpdate():
+    	return False
