@@ -33,39 +33,45 @@ class Worker(process):
 		reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
 		send((reqObject,),to=reqObject.subCoId)
 
-	def evaluatePolicyRequest(reqObject):
-		tree = ET.parse('../config/policy-example.xml')
-		root = tree.getroot()
-		for rule in root.iter('rule'):
-			#print('rule', rule.attrib['name'])
-			temp = database[reqObject.subId]
-			subcond = True
-			sc=rule.find('subjectCondition')
-			for attrName, attrValue in sc.items():
-				#print "%s = %s" % (attrName, attrValue)
-				subcond = subcond and temp[attrName] == attrValue
+    def evaluatePolicyRequest(reqObject):
+        tree = ET.parse('../config/policy-example.xml')
+        root = tree.getroot()
+        result = False
+        for rule in root.iter('rule'):
+            #print('rule', rule.attrib['name'])
+            temp = database[reqObject.subId]
+            subcond = True
+            sc=rule.find('subjectCondition')
+            for attrName, attrValue in sc.items():
+                #print "%s = %s" % (attrName, attrValue)
+                if attrName not in temp:
+                    return False
+                subcond = subcond and temp[attrName] == attrValue
 
-			temp = database[reqObject.resId]
-			rescond = True
-			rc=rule.find('resourceCondition')
-			for attrName, attrValue in rc.items():
-				#print "%s = %s" % (attrName, attrValue)
-				if "<" not in attrValue and ">" not in attrValue:
-					rescond = rescond and temp[attrName] == attrValue
-				elif "<" in attrValue:
-					rescond = rescond and int(temp[attrName]) < int(attrValue[1:])
-				elif ">" in attrValue:
-					rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
+            temp = database[reqObject.resId]
+            rescond = True
+            rc=rule.find('resourceCondition')
+            for attrName, attrValue in rc.items():
+                #print "%s = %s" % (attrName, attrValue)
+                if attrName not in temp:
+                    return False
+                if "<" not in attrValue and ">" not in attrValue:
+                    rescond = rescond and temp[attrName] == attrValue
+                elif "<" in attrValue:
+                    rescond = rescond and int(temp[attrName]) < int(attrValue[1:])
+                elif ">" in attrValue:
+                    rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
 
-			return subcond and rescond
+            result = result or (subcond and rescond)
 
-			#print('resource condition', rc.attrib)
-			#act=rule.find('action')
-			#print('action', act.attrib)
-			#su=rule.find('subjectUpdate')
-			#if su != None:
-				#print('subject update', su.attrib)
-			#ru=rule.find('resourceUpdate')
-			#if ru != None:
-				#print('resource update', ru.attrib)
-			#print()
+            #print('resource condition', rc.attrib)
+            #act=rule.find('action')
+            #print('action', act.attrib)
+            #su=rule.find('subjectUpdate')
+            #if su != None:
+                #print('subject update', su.attrib)
+            #ru=rule.find('resourceUpdate')
+            #if ru != None:
+                #print('resource update', ru.attrib)
+            #print()
+        return result
