@@ -3,7 +3,8 @@ from enum import Enum
 
 class MsgType(Enum):
 	POLICY_EVAL_REQUEST=1,
-	POLICY_EVAL_RESULT=2
+	POLICY_EVAL_RESULT=2,
+	POLICY_CONFLICT_CHECK=3
 
 class AppRequest():
     def __init__(self, subId,resId,clientProcId):

@@ -1,5 +1,7 @@
 SubjectCoordinator = import_da('SubjectCoordinator')
 Worker = import_da('Worker')
+common = import_da('common')
+
 class ResourceCoordinator(process):
     def setup(workerId:Worker,configHasHMap:dict): 
     	self.clearFlag=False
@@ -10,5 +12,12 @@ class ResourceCoordinator(process):
 
     def receive(msg=(reqObject,), from_=subCoId):
     	print("Received from SubCo:",reqObject.subCoId)
-    	send((reqObject,),to=workerId)
+    	if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
+    		send((reqObject,),to=workerId)
+    	elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
+    		reqObject.result = checkResourceConflict(reqObject)
+    		reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
+    		send((reqObject,),to=reqObject.subCoId)
 
+    def checkResourceConflict(reqObject):
+    	return True
