@@ -41,7 +41,7 @@ class Worker(process):
 			for attrName, attrValue in sc.items():
 				#print "%s = %s" % (attrName, attrValue)
 				if attrName not in temp:
-					return False
+					return result
 				subcond = subcond and temp[attrName] == attrValue
 
 			temp = database[reqObject.resId]
@@ -50,7 +50,7 @@ class Worker(process):
 			for attrName, attrValue in rc.items():
 				#print "%s = %s" % (attrName, attrValue)
 				if attrName not in temp:
-					return False
+					return result
 				if "<" not in attrValue and ">" not in attrValue:
 					rescond = rescond and temp[attrName] == attrValue
 				elif "<" in attrValue:

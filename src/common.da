@@ -3,7 +3,7 @@ import uuid
 from enum import Enum
 import xml.etree.ElementTree as ET
 
-database = {}
+database={}
 
 class MsgType(Enum):
 	POLICY_EVAL_REQUEST=1,
@@ -42,3 +42,9 @@ class AppRequest():
         self.result = {}
         self.msgType = MsgType.POLICY_EVAL_REQUEST
         self.tentativeUpdate = {}
+
+class DbObject():
+	def __init__(self):
+		self.msgType = None
+		self.reqObject=None
+		self.database={}
