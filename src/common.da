@@ -1,22 +1,50 @@
 import time
 import uuid
 from enum import Enum
+import xml.etree.ElementTree as ET
+
+database={}
 
 class MsgType(Enum):
 	POLICY_EVAL_REQUEST=1,
 	POLICY_EVAL_RESULT=2,
-	POLICY_CONFLICT_CHECK=3
+	POLICY_CONFLICT_CHECK=3,
+	ATTR_DB_READ=4,
+	ATTR_DB_WRITE=5
+
+def initDB(dbFile):
+	print("DBfile:",dbFile)
+	tree = ET.parse(dbFile)
+	root = tree.getroot()
+	for subj in root.iter('subject'):
+		temp = {}
+		for attrName, attrValue in subj.items():
+			temp[attrName] = attrValue
+		database[subj.attrib['id']] = temp
+
+	for res in root.iter('resource'):
+		temp = {}
+		for attrName, attrValue in res.items():
+			temp[attrName] = attrValue
+		database[res.attrib['id']] = temp
+	return database	
 
 class AppRequest():
-	def __init__(self, subId, resId, clientProcId):
-		self.subId = subId
-		self.resId = resId
-		self.subCoId = None
-		self.resCoId = None
-		self.clientId = clientProcId
-		self.uniqueId = uuid.uuid4().hex
-		self.isTentative = False
-		self.tentativeUpdate = {}
-		self.timestamp = time.time()
-		self.result = {}
-		self.msgType = MsgType.POLICY_EVAL_REQUEST
+    def __init__(self, subId, resId, clientProcId):
+        self.subId = subId
+        self.resId = resId
+        self.subCoId = None
+        self.resCoId = None
+        self.clientId = clientProcId
+        self.uniqueId = uuid.uuid4().hex
+        self.isTentaive = False
+        self.tentativeUpdate = {}
+        self.timestamp = time.time()
+        self.result = {}
+        self.msgType = MsgType.POLICY_EVAL_REQUEST
+
+class DbObject():
+	def __init__(self):
+		self.msgType = None
+		self.reqObject=None
+		self.database={}
