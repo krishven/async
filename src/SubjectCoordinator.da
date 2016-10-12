@@ -23,7 +23,7 @@ class SubjectCoordinator(process):
 			reqObject.isTentaive = False
 			for key in tentative:
 				temp = tentative[key]
-				if temp['id'] == reqObject.subId:
+				if temp['id'] == reqObject.subId or temp['id'] == reqObject.resId:
 					temp['used'] = False
 					reqObject.tentativeUpdate[key] = temp
 					reqObject.isTentative = True

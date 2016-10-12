@@ -26,6 +26,18 @@ class Worker(process):
 			reqObject.result = evaluatePolicyRequest(database,reqObject)
 			reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
 			send((reqObject,),to=reqObject.subCoId)
+
+	def checkResourceCondition(attrName, attrValue, temp, rescond, isTentative):
+		if isTentative:
+			attrName = 'attrValue'
+		if "<" not in attrValue and ">" not in attrValue:
+			rescond = rescond and temp[attrName] == attrValue
+		elif "<" in attrValue:
+			rescond = rescond and int(temp[attrName]) < int(attrValue[1:])
+		elif ">" in attrValue:
+			rescond = rescond and int(temp[attrName]) > int(attrValue[1:])
+
+		return rescond
 			
 	def evaluatePolicyRequest(database,reqObject):
 
@@ -47,7 +59,7 @@ class Worker(process):
 				if reqObject.isTentative == True:
 					for key in reqObject.tentativeUpdate:
 						tent = reqObject.tentativeUpdate[key]
-						if attrName == tent['attrName']:
+						if attrName == tent['attrName'] and tent['id'] == reqObject.subId:
 							subcond = subcond and tent['attrValue'] == attrValue
 							tent['used'] = True
 							tentUsed = True
@@ -65,18 +77,30 @@ class Worker(process):
 			temp = database[reqObject.resId]
 			rescond = True
 			rc = rule.find('resourceCondition')
+
 			for attrName, attrValue in rc.items():
 				#print "%s = %s" % (attrName, attrValue)
+
+				if reqObject.isTentative == True:
+					for key in reqObject.tentativeUpdate:
+						tent = reqObject.tentativeUpdate[key]
+						if attrName == tent['attrName'] and tent['id'] == reqObject.resId:
+							rescond = checkResourceCondition(attrName, attrValue, tent, rescond, True)
+							tent['used'] = True
+							tentUsed = True
+							reqObject.tentativeUpdate[key] = tent
+							break
+
+				if tentUsed == True:
+					break
+
 				if attrName not in temp:
 					return result
-				if "<" not in attrValue and ">" not in attrValue:
-					rescond = rescond and temp[attrName] == attrValue
-				elif "<" in attrValue:
-					rescond = rescond and int(temp[attrName]) < int(attrValue[1:])
-				elif ">" in attrValue:
-					rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
+
+				rescond = checkResourceCondition(attrName, attrValue, temp, rescond, False)
 
 			result['value'] = result['value'] or (subcond and rescond)
+			print(result['value'])
 
 			if result['value'] == True:
 				su = rule.find('subjectUpdate')
@@ -92,7 +116,20 @@ class Worker(process):
 					for attrName, attrValue in ru.items():
 						result['type'] = 'resource'
 						result['attrName'] = attrName
-						result['attrValue'] = attrValue
+
+						if(attrValue == '++'):
+							count = int(temp[attrName])
+							count += 1
+							result['attrValue'] = str(count)
+
+						elif(attrValue == '--'):
+							count = int(temp[attrName])
+							count -= 1
+							result['attrValue'] = str(count)
+
+						else:   
+							result['attrValue'] = attrValue
+
 						break
 				break
 

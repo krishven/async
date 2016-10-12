@@ -30,7 +30,7 @@ def main():
     result['value'] = False
     for rule in root.iter('rule'):
         #print('rule', rule.attrib['name'])
-        temp = database['1']
+        temp = database['6']
         subcond = True
         sc=rule.find('subjectCondition')
         for attrName, attrValue in sc.items():
@@ -39,7 +39,7 @@ def main():
                 print('not exists')
             subcond = subcond and temp[attrName] == attrValue
 
-        temp = database['3']
+        temp = database['5']
         rescond = True
         rc=rule.find('resourceCondition')
         for attrName, attrValue in rc.items():
@@ -49,7 +49,7 @@ def main():
             elif "<" in attrValue:
                 rescond = rescond and int(temp[attrName]) < int(attrValue[1:])
             elif ">" in attrValue:
-                rescond = rescond and int(temp[attrName][1:]) > int(attrValue[1:])
+                rescond = rescond and int(temp[attrName]) > int(attrValue[1:])
 
         print(subcond and rescond)
         result['value'] = result['value'] or (subcond and rescond)
