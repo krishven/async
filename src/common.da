@@ -19,13 +19,15 @@ def initDB(dbFile):
 	for subj in root.iter('subject'):
 		temp = {}
 		for attrName, attrValue in subj.items():
-			temp[attrName] = attrValue
+			if attrName != 'id':
+				temp[attrName] = attrValue
 		database[subj.attrib['id']] = temp
 
 	for res in root.iter('resource'):
 		temp = {}
 		for attrName, attrValue in res.items():
-			temp[attrName] = attrValue
+			if attrName != 'id':
+				temp[attrName] = attrValue
 		database[res.attrib['id']] = temp
 	return database	
 
