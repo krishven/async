@@ -8,15 +8,15 @@ class MsgType(Enum):
 	POLICY_CONFLICT_CHECK=3
 
 class AppRequest():
-    def __init__(self, subId, resId, clientProcId):
-        self.subId = subId
-        self.resId = resId
-        self.subCoId = None
-        self.resCoId = None
-        self.clientId = clientProcId
-        self.uniqueId = uuid.uuid4().hex
-        self.isTentaive = False
-        self.timestamp = time.time()
-        self.result = {}
-        self.msgType = MsgType.POLICY_EVAL_REQUEST
-        self.tentativeUpdate = {}
+	def __init__(self, subId, resId, clientProcId):
+		self.subId = subId
+		self.resId = resId
+		self.subCoId = None
+		self.resCoId = None
+		self.clientId = clientProcId
+		self.uniqueId = uuid.uuid4().hex
+		self.isTentative = False
+		self.tentativeUpdate = {}
+		self.timestamp = time.time()
+		self.result = {}
+		self.msgType = MsgType.POLICY_EVAL_REQUEST

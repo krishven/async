@@ -39,20 +39,38 @@ class Worker(process):
 		root = tree.getroot()
 		result = {}
 		result['value'] = False
+
 		for rule in root.iter('rule'):
 			#print('rule', rule.attrib['name'])
 			temp = database[reqObject.subId]
 			subcond = True
-			sc=rule.find('subjectCondition')
+			sc = rule.find('subjectCondition')
+			tentUsed = False
+
 			for attrName, attrValue in sc.items():
 				#print "%s = %s" % (attrName, attrValue)
+
+				if reqObject.isTentative == True:
+					for key in reqObject.tentativeUpdate:
+						tent = reqObject.tentativeUpdate[key]
+						if attrName == tent['attrName']:
+							subcond = subcond and tent['attrValue'] == attrValue
+							tent['used'] = True
+							tentUsed = True
+							reqObject.tentativeUpdate[key] = tent
+							break
+
+				if tentUsed == True:
+					break
+
 				if attrName not in temp:
 					return False
+
 				subcond = subcond and temp[attrName] == attrValue
 
 			temp = database[reqObject.resId]
 			rescond = True
-			rc=rule.find('resourceCondition')
+			rc = rule.find('resourceCondition')
 			for attrName, attrValue in rc.items():
 				#print "%s = %s" % (attrName, attrValue)
 				if attrName not in temp:
@@ -67,14 +85,15 @@ class Worker(process):
 			result['value'] = result['value'] or (subcond and rescond)
 
 			if result['value'] == True:
-				su=rule.find('subjectUpdate')
+				su = rule.find('subjectUpdate')
 				if su != None:
 					for attrName, attrValue in su.items():
 						result['type'] = 'subject'
 						result['attrName'] = attrName
 						result['attrValue'] = attrValue
 						break
-				ru=rule.find('resourceUpdate')
+
+				ru = rule.find('resourceUpdate')
 				if ru != None:
 					for attrName, attrValue in ru.items():
 						result['type'] = 'resource'

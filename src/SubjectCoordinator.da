@@ -1,50 +1,80 @@
 common = import_da('common')
+
 requests = {}
 tentative = {}
+tentStatus = {}
+
+ongoing = 1
+success = 2
+failure = 3
 
 class SubjectCoordinator(process):
-    def setup():pass
+	def setup():pass
 
-    def run():
-        output("hello SubCo!")
-        await(False)
+	def run():
+		output("hello SubCo!")
+		await(False)
 
-    def receive(msg=(reqObject,), from_=recvProcId):
-    	if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
-    		requests[reqObject.uniqueId] = reqObject
-    		if(isTentativeUpdate()):
-    			pass
-    		else:
-    			print("Send to resco:",reqObject.resCoId)
-    			send((reqObject,), to=reqObject.resCoId)
+	def receive(msg=(reqObject,), from_=recvProcId):
+		if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
+			requests[reqObject.uniqueId] = reqObject
+			
+			reqObject.isTentaive = False
+			for key in tentative:
+				temp = tentative[key]
+				if temp['id'] == reqObject.subId:
+					temp['used'] = False
+					reqObject.tentativeUpdate[key] = temp
+					reqObject.isTentative = True
 
-    	elif(reqObject.msgType == common.MsgType.POLICY_EVAL_RESULT):
-    		print("res is:",reqObject.result['value'])
-    		if(reqObject.result['value']):
-    			updateTentativeAttr(reqObject)
-    			reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
-    			send((reqObject,),to=reqObject.resCoId)
-    		send((reqObject.result,),to=reqObject.clientId)
-    	elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
-    			if(reqObject.result):
-    				commitTentativeAttr(reqObject)	
-    			else:
-    				removeTentativeEntry(reqObject)
-    				restartRequest(reqObject)	
-    	else:
-    		print("Invalid msg")			
+			print("Send to resco:",reqObject.resCoId)
+			send((reqObject,), to=reqObject.resCoId)
 
-    def isTentativeUpdate():
-    	return False
+		elif(reqObject.msgType == common.MsgType.POLICY_EVAL_RESULT):
+			print("res is:",reqObject.result['value'])
+			if(reqObject.result['value']):
+				if reqObject.isTentative == False:
+					updateTentativeAttr(reqObject, reqObject.result)
+				else:
+					for key in reqObject.tentativeUpdate:
+						tent = reqObject.tentativeUpdate[key]
+						if tent['used'] == True:
+							await(tentStatus[key] != ongoing)
+							if tentStatus[key] == success:
+								continue
+							else:
+								restartRequest(reqObject)
+								return
+					updateTentativeAttr(reqObject, reqObject.result)
 
-    def updateTentativeAttr(reqObject):
-    	pass
+				reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
+				send((reqObject,),to=reqObject.resCoId)
+			send((reqObject.result,),to=reqObject.clientId)
+		elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
+				if(reqObject.result):
+					commitTentativeAttr(reqObject)	
+				else:
+					removeTentativeEntry(reqObject)
+					restartRequest(reqObject)	
+		else:
+			print("Invalid msg")
 
-    def commitTentativeAttr(reqObject):
-    	pass	
+	def updateTentativeAttr(reqObject, result):
+		temp = {}
+		temp['id'] = reqObject.subId
+		temp['time'] = reqObject.timestamp
+		temp['attrName'] = result['attrName']
+		temp['attrValue'] = result['attrValue']
+		tentative[reqObject.uniqueId] = temp
+		tentStatus[reqObject.uniqueId] = ongoing
 
-    def	removeTentativeEntry(reqObject):
-    	pass
+	def commitTentativeAttr(reqObject):
+		pass	
 
-    def restartRequest(reqObject):
-    	pass
+	def	removeTentativeEntry(reqObject):
+		if reqObject.uniqueId in tentative:
+			del tentative[reqObject.uniqueId]
+			tentStatus[reqObject.uniqueId] = failure
+
+	def restartRequest(reqObject):
+		pass
