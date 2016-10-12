@@ -50,6 +50,7 @@ def main():
         cliProcessHashMap[i]=procId
         i+=1
 
+    setup(subCoProcIds,(dbEmulatorId,))
     setup(resCoProcIds,(workerProcIds,configHashMap))
     setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,sys.argv[1],))
     setup(workerProcIds,(dbEmulatorId,configHashMap,))

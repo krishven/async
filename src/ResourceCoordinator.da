@@ -15,9 +15,8 @@ class ResourceCoordinator(process):
     	if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
     		send((reqObject,),to=workerId)
     	elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
-    		reqObject.result = checkResourceConflict(reqObject)
-    		reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
+    		checkResourceConflict(reqObject)
     		send((reqObject,),to=reqObject.subCoId)
 
     def checkResourceConflict(reqObject):
-    	return True
+    	reqObject.result['value']=True

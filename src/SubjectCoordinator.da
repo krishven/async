@@ -1,4 +1,6 @@
 common = import_da('common')
+dbEmulator = import_da('DbEmulator')
+
 
 requests = {}
 tentative = {}
@@ -9,7 +11,7 @@ success = 2
 failure = 3
 
 class SubjectCoordinator(process):
-	def setup():pass
+	def setup(dbId:dbEmulator.DbEmulator):pass
 
 	def run():
 		output("hello SubCo!")
@@ -47,11 +49,15 @@ class SubjectCoordinator(process):
 								return
 					updateTentativeAttr(reqObject, reqObject.result)
 
+				#send Resource conflict check msg to resource coordinator	
 				reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
 				send((reqObject,),to=reqObject.resCoId)
+
+			#sending evaluation status to client		
 			send((reqObject.result,),to=reqObject.clientId)
+
 		elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
-				if(reqObject.result):
+				if(reqObject.result['value']):
 					commitTentativeAttr(reqObject)	
 				else:
 					removeTentativeEntry(reqObject)
@@ -69,7 +75,11 @@ class SubjectCoordinator(process):
 		tentStatus[reqObject.uniqueId] = ongoing
 
 	def commitTentativeAttr(reqObject):
-		pass	
+		commitObj = tentative[reqObject.uniqueId]
+		dbObj = common.DbObject()
+		dbObj.msgType = common.MsgType.ATTR_DB_WRITE
+		dbObj.database = commitObj
+		send((dbObj,),to=dbId)
 
 	def	removeTentativeEntry(reqObject):
 		if reqObject.uniqueId in tentative:
