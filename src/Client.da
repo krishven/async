@@ -1,8 +1,8 @@
 common = import_da('common')
 class Client(process):
     def setup(configHashMap:dict,subCoIdMap:dict,resCoIdMap:dict,configFile:str): 
-        self.resumeFlag=False 
-        self.appReq=None
+        self.resumeFlag = False 
+        self.appReq = None
         pass #print("poda:",subCoId)
 
     def run():
@@ -13,14 +13,14 @@ class Client(process):
         resId = configHashMap['resourceId']
         numCoordinators = int(configHashMap['numCoordinators'])
         appReq = common.AppRequest(subId,resId,self.id)
-        appReq.subCoId = subCoIdMap[int(subId)%(numCoordinators/2)]
-        appReq.resCoId = resCoIdMap[int(resId)%(numCoordinators - numCoordinators/2)]
+        appReq.subCoId = subCoIdMap[int(subId) % (numCoordinators/2)]
+        appReq.resCoId = resCoIdMap[int(resId) % (numCoordinators - numCoordinators/2)]
         appReq.msgType = common.MsgType.POLICY_EVAL_REQUEST
         print(appReq.msgType)
         #self.subCoId=appReq.subCoId
         send((appReq,),to=appReq.subCoId)
         await(self.resumeFlag)
         
-    def receive(msg=(result,), from_= subCoId):
-        output("Got Response from subco:" ,result)
-        self.resumeFlag=True
+    def receive(msg = (result,), from_ = subCoId):
+        output("Got Response from subco:" ,result['value'])
+        self.resumeFlag = True
