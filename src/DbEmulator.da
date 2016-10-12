@@ -18,6 +18,19 @@ class DbEmulator(process):
 		elif(reqObject.msgType == common.MsgType.ATTR_DB_WRITE):
 			output("DbEmulator: received attribute write")
 			temp = self.dbObj.database[reqObject.database['id']]
-			temp[reqObject.database['attrName']] = reqObject.database['attrValue']
+			
+			if(reqObject.database['attrValue']=='++'):
+				count = int(temp[reqObject.database['attrName']])
+				count+=1
+				temp[reqObject.database['attrName']]=str(count)
+
+			elif(reqObject.database['attrValue']=='--'):
+				count = int(temp[reqObject.database['attrName']])
+				count-=1
+				temp[reqObject.database['attrName']]=str(count)
+
+			else:	
+				temp[reqObject.database['attrName']] = reqObject.database['attrValue']
+
 			self.dbObj.database[reqObject.database['id']] = temp
 			print ("database:",self.dbObj.database)
