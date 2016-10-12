@@ -1,7 +1,6 @@
 common = import_da('common')
 dbEmulator = import_da('DbEmulator')
 
-
 requests = {}
 tentative = {}
 tentStatus = {}
@@ -67,8 +66,10 @@ class SubjectCoordinator(process):
 
 	def updateTentativeAttr(reqObject, result):
 		temp = {}
-		temp['id'] = reqObject.subId
-		temp['time'] = reqObject.timestamp
+		if result['type'] == 'subject':
+			temp['id'] = reqObject.subId
+		else:
+			temp['id'] = reqObject.resId
 		temp['attrName'] = result['attrName']
 		temp['attrValue'] = result['attrValue']
 		tentative[reqObject.uniqueId] = temp
@@ -80,6 +81,9 @@ class SubjectCoordinator(process):
 		dbObj.msgType = common.MsgType.ATTR_DB_WRITE
 		dbObj.database = commitObj
 		send((dbObj,),to=dbId)
+		tentStatus[reqObject.uniqueId] = success
+		if reqObject.uniqueId in tentative:
+			del tentative[reqObject.uniqueId]
 
 	def	removeTentativeEntry(reqObject):
 		if reqObject.uniqueId in tentative:
