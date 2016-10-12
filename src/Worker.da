@@ -1,39 +1,33 @@
 SubjectCoordinator = import_da('SubjectCoordinator')
 common = import_da('common')
+dbEmulator = import_da('DbEmulator')
 
 import xml.etree.ElementTree as ET
-database = {}
 
 class Worker(process):
-	def setup(configHasHMap:dict): pass
-
-	def initDB():
-		tree = ET.parse('database.xml')
-		root = tree.getroot()
-		for subj in root.iter('subject'):
-			temp = {}
-			for attrName, attrValue in subj.items():
-				temp[attrName] = attrValue
-			database[subj.attrib['id']] = temp
-
-		for res in root.iter('resource'):
-			temp = {}
-			for attrName, attrValue in res.items():
-				temp[attrName] = attrValue
-			database[res.attrib['id']] = temp
+	def setup(dbId: dbEmulator.DbEmulator, configHasHMap:dict):pass
 
 	def run():
 		output("hello Worker!")
-		initDB()
 		await(False)
 
 	def receive(msg=(reqObject,), from_=subCoId):
-		output("Received from ResCo")
-		reqObject.result = evaluatePolicyRequest(reqObject)
-		reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
-		send((reqObject,),to=reqObject.subCoId)
 
-	def evaluatePolicyRequest(reqObject):
+		if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
+			output("Received from ResCo")
+			reqObject.msgType = common.MsgType.ATTR_DB_READ
+			send((reqObject,),to=dbId)
+
+		elif(reqObject.msgType == common.MsgType.ATTR_DB_READ):
+			output("Read from Db emulator" , reqObject.reqObject)
+			database = reqObject.database
+			reqObject = reqObject.reqObject
+			reqObject.result = evaluatePolicyRequest(database,reqObject)
+			reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
+			send((reqObject,),to=reqObject.subCoId)
+			
+	def evaluatePolicyRequest(database,reqObject):
+
 		tree = ET.parse('../config/policy-example.xml')
 		root = tree.getroot()
 		result = False

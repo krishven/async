@@ -1,0 +1,22 @@
+common = import_da('common')
+class DbEmulator(process):
+	def setup(configHasHMap:dict):
+		self.dbObj = common.DbObject()
+	def run():
+		output("hello DbEmulator!",configHasHMap['dbFile'])
+		database = common.initDB(configHasHMap['dbFile'])
+		self.dbObj.database = database
+		await(False)
+
+	def receive(msg=(reqObject,), from_=srcId):
+		if(reqObject.msgType == common.MsgType.ATTR_DB_READ):
+			output("DbEmulator: received attribute read")
+			self.dbObj.reqObject = reqObject
+			self.dbObj.msgType = common.MsgType.ATTR_DB_READ
+			send((self.dbObj,),to=srcId)
+
+		elif(reqObject.msgType == common.MsgType.ATTR_DB_WRITE):
+			output("DbEmulator: received attribute write")
+			temp = self.dbObj.database[reqObject.database['id']]
+			temp[reqObject.database['attrName']] = reqObject.database['attrValue']
+			self.dbObj.database[reqObject.database['id']] = temp

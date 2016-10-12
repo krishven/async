@@ -6,6 +6,8 @@ subject = import_da('SubjectCoordinator')
 resource = import_da('ResourceCoordinator')
 client = import_da('Client')
 worker = import_da('Worker')
+dbEmulator = import_da('DbEmulator')
+
 
 #configHashMap={}
 subProcessHashMap={}
@@ -29,6 +31,7 @@ def main():
     resCoProcIds = new(resource.ResourceCoordinator, num = numCoordinators - int(numCoordinators/2) )
     clientProcIds = new(client.Client, num=int(configHashMap['numClients']))
     workerProcIds = new(worker.Worker, num=int(configHashMap['numWorkers']))
+    dbEmulatorId = new(dbEmulator.DbEmulator,num=1)
 
  #   setup(subCoProcIds
     i=0
@@ -48,8 +51,11 @@ def main():
         i+=1
 
     setup(resCoProcIds,(workerProcIds,configHashMap))
-    setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,sys.argv[1],))    
+    setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,sys.argv[1],))
+    setup(workerProcIds,(dbEmulatorId,configHashMap,))
+    setup(dbEmulatorId,(configHashMap,))
+    start(dbEmulatorId)    
     start(subCoProcIds)
     start(resCoProcIds)
     start(clientProcIds)
-    start(workerProcIds,(configHashMap,))
+    start(workerProcIds)
