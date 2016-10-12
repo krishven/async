@@ -37,7 +37,7 @@ class AppRequest():
         self.resCoId = None
         self.clientId = clientProcId
         self.uniqueId = uuid.uuid4().hex
-        self.isTentaive = False
+        self.isTentative = False
         self.tentativeUpdate = {}
         self.timestamp = time.time()
         self.result = {}
