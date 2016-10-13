@@ -27,17 +27,17 @@ class Worker(process):
 			reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
 			send((reqObject,),to=reqObject.subCoId)
 
-	def checkResourceCondition(attrName, attrValue, temp, rescond, isTentative):
+	def checkCondition(attrName, attrValue, temp, cond, isTentative):
 		if isTentative:
 			attrName = 'attrValue'
 		if "<" not in attrValue and ">" not in attrValue:
-			rescond = rescond and temp[attrName] == attrValue
+			cond = cond and temp[attrName] == attrValue
 		elif "<" in attrValue:
-			rescond = rescond and int(temp[attrName]) < int(attrValue[1:])
+			cond = cond and int(temp[attrName]) < int(attrValue[1:])
 		elif ">" in attrValue:
-			rescond = rescond and int(temp[attrName]) > int(attrValue[1:])
+			cond = cond and int(temp[attrName]) > int(attrValue[1:])
 
-		return rescond
+		return cond
 			
 	def evaluatePolicyRequest(database,reqObject):
 
@@ -60,7 +60,7 @@ class Worker(process):
 					for key in reqObject.tentativeUpdate:
 						tent = reqObject.tentativeUpdate[key]
 						if attrName == tent['attrName'] and tent['id'] == reqObject.subId:
-							subcond = subcond and tent['attrValue'] == attrValue
+							subcond = checkCondition(attrName, attrValue, tent, subcond, True)
 							tent['used'] = True
 							tentUsed = True
 							reqObject.tentativeUpdate[key] = tent
@@ -75,7 +75,7 @@ class Worker(process):
 				if attrName not in temp:
 					return result
 
-				subcond = subcond and temp[attrName] == attrValue
+				subcond = checkCondition(attrName, attrValue, temp, subcond, False)
 
 				if subcond == False:
 					break
@@ -96,7 +96,7 @@ class Worker(process):
 					for key in reqObject.tentativeUpdate:
 						tent = reqObject.tentativeUpdate[key]
 						if attrName == tent['attrName'] and tent['id'] == reqObject.resId:
-							rescond = checkResourceCondition(attrName, attrValue, tent, rescond, True)
+							rescond = checkCondition(attrName, attrValue, tent, rescond, True)
 							tent['used'] = True
 							tentUsed = True
 							reqObject.tentativeUpdate[key] = tent
@@ -111,7 +111,7 @@ class Worker(process):
 				if attrName not in temp:
 					return result
 
-				rescond = checkResourceCondition(attrName, attrValue, temp, rescond, False)
+				rescond = checkCondition(attrName, attrValue, temp, rescond, False)
 
 				if rescond == False:
 					break
