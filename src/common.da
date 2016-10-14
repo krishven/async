@@ -43,6 +43,8 @@ class AppRequest():
         self.tentativeUpdate = {}
         self.timestamp = time.time()
         self.result = {}
+        self.subRules = {}
+        self.resRules = {}
         self.msgType = MsgType.POLICY_EVAL_REQUEST
 
 class DbObject():

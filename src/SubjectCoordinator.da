@@ -4,6 +4,7 @@ dbEmulator = import_da('DbEmulator')
 requests = {}
 tentative = {}
 tentStatus = {}
+updates = {}
 
 ongoing = 1
 success = 2
@@ -34,23 +35,26 @@ class SubjectCoordinator(process):
 		elif(reqObject.msgType == common.MsgType.POLICY_EVAL_RESULT):
 			print("res is:",reqObject.result['value'])
 			if(reqObject.result['value']):
-				if reqObject.isTentative == False:
-					updateTentativeAttr(reqObject, reqObject.result)
-				else:
-					for key in reqObject.tentativeUpdate:
-						tent = reqObject.tentativeUpdate[key]
-						if tent['used'] == True:
-							await(tentStatus[key] != ongoing)
-							if tentStatus[key] == success:
-								continue
-							else:
-								restartRequest(reqObject)
-								return
-					updateTentativeAttr(reqObject, reqObject.result)
+				if checkForConflict(reqObject) == True:
+					if reqObject.isTentative == False:
+						updateTentativeAttr(reqObject, reqObject.result)
+					else:
+						for key in reqObject.tentativeUpdate:
+							tent = reqObject.tentativeUpdate[key]
+							if tent['used'] == True:
+								await(tentStatus[key] != ongoing)
+								if tentStatus[key] == success:
+									continue
+								else:
+									restartRequest(reqObject)
+									return
+						updateTentativeAttr(reqObject, reqObject.result)
 
-				#send Resource conflict check msg to resource coordinator	
-				reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
-				send((reqObject,),to=reqObject.resCoId)
+					#send Resource conflict check msg to resource coordinator	
+					reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
+					send((reqObject,),to=reqObject.resCoId)
+				else:
+					restartRequest(reqObject)
 
 			#sending evaluation status to client		
 			send((reqObject.result,),to=reqObject.clientId)
@@ -63,6 +67,21 @@ class SubjectCoordinator(process):
 					restartRequest(reqObject)	
 		else:
 			print("Invalid msg")
+
+	def checkForConflict(reqObject):
+		for attr in reqObject.subRules:
+			print(attr)
+			if (reqObject.subId, attr) in updates:
+				updateTime = updates[(reqObject.subId, attr)]
+				if updateTime >= reqObject.timestamp:
+					return False
+				else:
+					updates[(reqObject.subId, attr)] = reqObject.timestamp
+			else:
+				updates[(reqObject.subId, attr)] = reqObject.timestamp
+
+		print('Updates',updates)
+		return True
 
 	def updateTentativeAttr(reqObject, result):
 		temp = {}

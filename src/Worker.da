@@ -27,9 +27,24 @@ class Worker(process):
 			reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
 			send((reqObject,),to=reqObject.subCoId)
 
+	def checkUpdate(data, attrName, attrValue):
+		if(attrValue == '++'):
+			count = int(data[attrName])
+			count += 1
+			return str(count)
+
+		elif(attrValue == '--'):
+			count = int(data[attrName])
+			count -= 1
+			return str(count)
+
+		else:   
+			return attrValue
+
 	def checkCondition(attrName, attrValue, temp, cond, isTentative):
 		if isTentative:
 			attrName = 'attrValue'
+
 		if "<" not in attrValue and ">" not in attrValue:
 			cond = cond and temp[attrName] == attrValue
 		elif "<" in attrValue:
@@ -48,88 +63,95 @@ class Worker(process):
 
 		for rule in root.iter('rule'):
 			#print('rule', rule.attrib['name'])
-			temp = database[reqObject.subId]
-			subcond = True
-			sc = rule.find('subjectCondition')
+			subData = database[reqObject.subId]
+			subCond = True
 			tentUsed = False
+			subRule = []
+			sc = rule.find('subjectCondition')
 
 			for attrName, attrValue in sc.items():
 				#print "%s = %s" % (attrName, attrValue)
+				subRule.append(attrName)
 
 				if reqObject.isTentative == True:
 					for key in reqObject.tentativeUpdate:
 						tent = reqObject.tentativeUpdate[key]
 						if attrName == tent['attrName'] and tent['id'] == reqObject.subId:
-							subcond = checkCondition(attrName, attrValue, tent, subcond, True)
+							subCond = checkCondition(attrName, attrValue, tent, subCond, True)
 							tent['used'] = True
 							tentUsed = True
 							reqObject.tentativeUpdate[key] = tent
 							break
 
-				if tentUsed == True and subcond == True:
+				if tentUsed == True and subCond == True:
 					tentUsed = False
 					continue
-				elif tentUsed == True and subcond == False:
+				elif tentUsed == True and subCond == False:
 					break
 
-				if attrName not in temp:
+				if attrName not in subData:
 					return result
 
-				subcond = checkCondition(attrName, attrValue, temp, subcond, False)
+				subCond = checkCondition(attrName, attrValue, subData, subCond, False)
 
-				if subcond == False:
+				if subCond == False:
 					break
 
-			if subcond == False:
+			if subCond == False:
 				print(result['value'])
 				continue
 
-			temp = database[reqObject.resId]
-			rescond = True
+			resData = database[reqObject.resId]
+			resCond = True
 			tentUsed = False
+			resRule = []
 			rc = rule.find('resourceCondition')
 
 			for attrName, attrValue in rc.items():
 				#print "%s = %s" % (attrName, attrValue)
+				resRule.append(attrName)
 
 				if reqObject.isTentative == True:
 					for key in reqObject.tentativeUpdate:
 						tent = reqObject.tentativeUpdate[key]
 						if attrName == tent['attrName'] and tent['id'] == reqObject.resId:
-							rescond = checkCondition(attrName, attrValue, tent, rescond, True)
+							resCond = checkCondition(attrName, attrValue, tent, resCond, True)
 							tent['used'] = True
 							tentUsed = True
 							reqObject.tentativeUpdate[key] = tent
 							break
 
-				if tentUsed == True and rescond == True:
+				if tentUsed == True and resCond == True:
 					tentUsed = False
 					continue
-				elif tentUsed == True and rescond == False:
+				elif tentUsed == True and resCond == False:
 					break
 
-				if attrName not in temp:
+				if attrName not in resData:
 					return result
 
-				rescond = checkCondition(attrName, attrValue, temp, rescond, False)
+				resCond = checkCondition(attrName, attrValue, resData, resCond, False)
 
-				if rescond == False:
+				if resCond == False:
 					break
 
-			if rescond == False:
+			if resCond == False:
 				print(result['value'])
 				continue
 
-			result['value'] = result['value'] or (subcond and rescond)
+			result['value'] = result['value'] or (subCond and resCond)
 			print(result['value'])
 
 			if result['value'] == True:
+				reqObject.subRules = subRule
+				reqObject.resRules = resRule
+
 				su = rule.find('subjectUpdate')
 				if su != None:
 					for attrName, attrValue in su.items():
 						result['type'] = 'subject'
 						result['attrName'] = attrName
-						result['attrValue'] = attrValue
+						result['attrValue'] = checkUpdate(subData, attrName, attrValue)
 						break
 
 				ru = rule.find('resourceUpdate')
@@ -137,20 +159,7 @@ class Worker(process):
 					for attrName, attrValue in ru.items():
 						result['type'] = 'resource'
 						result['attrName'] = attrName
-
-						if(attrValue == '++'):
-							count = int(temp[attrName])
-							count += 1
-							result['attrValue'] = str(count)
-
-						elif(attrValue == '--'):
-							count = int(temp[attrName])
-							count -= 1
-							result['attrValue'] = str(count)
-
-						else:   
-							result['attrValue'] = attrValue
-
+						result['attrValue'] = checkUpdate(resData, attrName, attrValue)
 						break
 				break
 
