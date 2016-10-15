@@ -23,7 +23,7 @@ class Worker(process):
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
 		reqObject.timestamp = time.time()
-		#time.sleep(int(reqObject.waitTime))
+		time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
 
 	def checkUpdate(data, attrName, attrValue):
