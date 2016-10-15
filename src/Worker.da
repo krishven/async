@@ -56,6 +56,7 @@ class Worker(process):
 		root = tree.getroot()
 		result = {}
 		result['value'] = False
+		result['update'] = False
 
 		for rule in root.iter('rule'):
 			#print('rule', rule.attrib['name'])
@@ -144,6 +145,7 @@ class Worker(process):
 
 				su = rule.find('subjectUpdate')
 				if su != None:
+					result['update'] = True
 					for attrName, attrValue in su.items():
 						result['type'] = 'subject'
 						result['attrName'] = attrName
@@ -152,6 +154,7 @@ class Worker(process):
 
 				ru = rule.find('resourceUpdate')
 				if ru != None:
+					result['update'] = True
 					for attrName, attrValue in ru.items():
 						result['type'] = 'resource'
 						result['attrName'] = attrName

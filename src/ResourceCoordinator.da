@@ -23,7 +23,6 @@ class ResourceCoordinator(process):
 	def checkResourceConflict(reqObject):
 		reqObject.result['value'] = True
 		for attr in reqObject.resRules:
-			print(attr)
 			if (reqObject.resId, attr) in updates:
 				updateTime = updates[(reqObject.resId, attr)]
 				if updateTime >= reqObject.timestamp:
