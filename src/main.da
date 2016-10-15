@@ -23,9 +23,10 @@ def readConfigFile(fileName):
 
     subIdList = configHashMap['subjectId'].split(',')    
     resIdList = configHashMap['resourceId'].split(',')
-    print (len(subIdList),len(resIdList))
+    waitTimeList = configHashMap['waitTime'].split(",")
     configHashMap['subjectId']=subIdList
     configHashMap['resourceId']=resIdList
+    configHashMap['waitTime']=waitTimeList
 
 def main():
     config(clock='Lamport')

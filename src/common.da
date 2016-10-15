@@ -25,7 +25,7 @@ def initDB(dbFile):
 	return database	
 
 class AppRequest():
-    def __init__(self, subId, resId, clientProcId):
+    def __init__(self, subId, resId, waitTime,clientProcId):
         self.subId = subId
         self.resId = resId
         self.subCoId = None
@@ -38,6 +38,7 @@ class AppRequest():
         self.result = {}
         self.subRules = {}
         self.resRules = {}
+        self.waitTime = waitTime
 
 class DbObject():
 	def __init__(self):

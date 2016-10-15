@@ -2,5 +2,6 @@ numCoordinators=6
 numClients=3
 subjectId=1,3,5
 resourceId=2,4,6
+waitTime=0,0,0
 numWorkers=1
 dbFile=database.xml
