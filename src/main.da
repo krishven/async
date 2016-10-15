@@ -21,6 +21,12 @@ def readConfigFile(fileName):
         temp = line.split("=")
         configHashMap[temp[0]]=temp[1] 
 
+    subIdList = configHashMap['subjectId'].split(',')    
+    resIdList = configHashMap['resourceId'].split(',')
+    print (len(subIdList),len(resIdList))
+    configHashMap['subjectId']=subIdList
+    configHashMap['resourceId']=resIdList
+
 def main():
     config(clock='Lamport')
     n=1
@@ -47,12 +53,12 @@ def main():
 
     i=0
     for procId in clientProcIds:
-        cliProcessHashMap[i]=procId
+        cliProcessHashMap[procId]=i
         i+=1
 
     setup(subCoProcIds,(dbEmulatorId,))
     setup(resCoProcIds,(workerProcIds,configHashMap))
-    setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,sys.argv[1],))
+    setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,cliProcessHashMap,))
     setup(workerProcIds,(dbEmulatorId,configHashMap,))
     setup(dbEmulatorId,(configHashMap,))
     start(dbEmulatorId)    
