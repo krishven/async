@@ -95,7 +95,7 @@ class Worker(process):
 					break
 
 			if subCond == False:
-				print(result['value'])
+				#print(result['value'])
 				continue
 
 			resData = database[reqObject.resId]
@@ -133,11 +133,11 @@ class Worker(process):
 					break
 
 			if resCond == False:
-				print(result['value'])
+				#print(result['value'])
 				continue
 
 			result['value'] = result['value'] or (subCond and resCond)
-			print(result['value'])
+			#print(result['value'])
 
 			if result['value'] == True:
 				reqObject.subRules = subRule
