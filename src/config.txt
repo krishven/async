@@ -1,9 +1,9 @@
 numCoordinators=6
 numClients=3
 subjectId=1,3,5
-resourceId=2,4,6
+resourceId=4,4,6
 waitTime=0,0,0
-action=read,read,view
+action=read,view,read
 numWorkers=1
 dbFile=database.xml
-random=1
+random=0

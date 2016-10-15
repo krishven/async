@@ -16,6 +16,9 @@ class Client(process):
         numClients = int(configHashMap['numClients'])
         numCoordinators = int(configHashMap['numCoordinators'])
         i=clientId[self.id]%numClients
+
+        print("Length of subidlist",len(subIdList))
+        
         while(i<len(subIdList)):
             #output("Send another request")
             #print("Waititme:",waitTimeList[i])

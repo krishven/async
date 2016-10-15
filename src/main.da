@@ -1,6 +1,8 @@
 
 import sys
 import os
+import random
+import time
 #common = import_da('common')
 subject = import_da('SubjectCoordinator') 
 resource = import_da('ResourceCoordinator')
@@ -14,6 +16,30 @@ subProcessHashMap={}
 resProcessHashMap={}
 cliProcessHashMap={}
 configHashMap={}
+
+
+def generateRandomList(numRequests,objType):
+    randList=[]
+    i=0;
+    while (i<numRequests):
+        tempList = configHashMap[objType]
+        index = random.randint(0,len(configHashMap[objType])-1)
+        randList.append(tempList[index])
+        i+=1
+
+    print(randList)    
+    return randList
+
+def generateRandomRequests():
+    random.seed(time.time())
+    numRequests = random.randint(1,10)
+    print("num requests",numRequests) 
+    configHashMap['subjectId'] = generateRandomList(numRequests,'subjectId')
+    configHashMap['resourceId'] = generateRandomList(numRequests,'resourceId')
+    configHashMap['action'] = generateRandomList(numRequests,'action')
+    configHashMap['waitTime'] = generateRandomList(numRequests,'waitTime')
+
+
 def readConfigFile(fileName):
     with open(fileName) as f:
             lines = f.read().splitlines()
@@ -34,8 +60,13 @@ def readConfigFile(fileName):
 def main():
     config(clock='Lamport')
     n=1
+
     configHashMap['random']=0
     readConfigFile(sys.argv[1])
+
+    if(int(configHashMap['random'])==1):
+        generateRandomRequests()
+
     numCoordinators = int(configHashMap['numCoordinators'])
     
     subCoProcIds = new(subject.SubjectCoordinator, num = int(numCoordinators/2))
