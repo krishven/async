@@ -2,6 +2,8 @@ SubjectCoordinator = import_da('SubjectCoordinator')
 Worker = import_da('Worker')
 common = import_da('common')
 
+import time
+
 updates = {}
 
 class ResourceCoordinator(process):
@@ -21,6 +23,7 @@ class ResourceCoordinator(process):
 		send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.subCoId)
 
 	def checkResourceConflict(reqObject):
+		result = reqObject.result
 		reqObject.result['value'] = True
 		for attr in reqObject.resRules:
 			if (reqObject.resId, attr) in updates:
@@ -29,9 +32,7 @@ class ResourceCoordinator(process):
 					reqObject.result['value'] = False
 					output('Conflict in ResourceCoordinator')
 					return
-				else:
-					updates[(reqObject.resId, attr)] = reqObject.timestamp
-			else:
-				updates[(reqObject.resId, attr)] = reqObject.timestamp
 
+		if result['update'] == True and result['type'] == 'resource':
+			updates[(reqObject.resId, result['attrName'])] = time.time()
 		print('Resource Updates',updates)

@@ -35,6 +35,7 @@ class AppRequest():
         self.isTentative = False
         self.tentativeUpdate = {}
         self.timestamp = time.time()
+        self.tentativeTime = None
         self.result = {}
         self.subRules = {}
         self.resRules = {}

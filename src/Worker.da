@@ -3,6 +3,7 @@ common = import_da('common')
 dbEmulator = import_da('DbEmulator')
 
 import xml.etree.ElementTree as ET
+import time
 result = {}
 
 class Worker(process):
@@ -21,6 +22,8 @@ class Worker(process):
 		database = reqObject.database
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
+		reqObject.timestamp = time.time()
+		#time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
 
 	def checkUpdate(data, attrName, attrValue):

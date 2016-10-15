@@ -65,13 +65,12 @@ class SubjectCoordinator(process):
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=recvProcId):
 		if(reqObject.result['value']):
-			commitTentativeAttr(reqObject)	
+			commitTentativeAttr(reqObject)
+			#sending evaluation status to client
+			send((reqObject.result,),to=reqObject.clientId)
 		else:
 			removeTentativeEntry(reqObject)
 			restartRequest(reqObject)
-
-		#sending evaluation status to client
-		send((reqObject.result,),to=reqObject.clientId)
 
 	def checkWaiting(uid):
 		for obj in waiting[uid]:
@@ -94,6 +93,7 @@ class SubjectCoordinator(process):
 	
 
 	def checkForConflict(reqObject):
+		result = reqObject.result
 		for attr in reqObject.subRules:
 			print(attr)
 			if (reqObject.subId, attr) in updates:
@@ -101,12 +101,7 @@ class SubjectCoordinator(process):
 				if updateTime >= reqObject.timestamp:
 					output('Conflict in SubjectCoordinator')
 					return False
-				else:
-					updates[(reqObject.subId, attr)] = reqObject.timestamp
-			else:
-				updates[(reqObject.subId, attr)] = reqObject.timestamp
 
-		print('Subject Updates',updates)
 		return True
 
 	def updateTentativeAttr(reqObject, result):
@@ -123,6 +118,12 @@ class SubjectCoordinator(process):
 		tentative[reqObject.uniqueId] = temp
 		tentStatus[reqObject.uniqueId] = ongoing
 
+		if result['update'] == True and result['type'] == 'subject':
+			if (reqObject.subId, result['attrName']) in updates:
+				reqObject.tentativeTime = updates[(reqObject.subId, result['attrName'])]
+			updates[(reqObject.subId, result['attrName'])] = time.time()
+		print('Subject Updates',updates)
+
 	def commitTentativeAttr(reqObject):
 		if reqObject.uniqueId not in tentative:
 			return
@@ -138,6 +139,13 @@ class SubjectCoordinator(process):
 			del waiting[reqObject.uniqueId]
 
 	def	removeTentativeEntry(reqObject):
+		result = reqObject.result
+		if result['update'] == True and result['type'] == 'subject':
+			if reqObject.tentativeTime == None:
+				del updates[(reqObject.subId, result['attrName'])]
+			else:
+				updates[(reqObject.subId, result['attrName'])] = reqObject.tentativeTime
+		updates[(reqObject.subId, result['attrName'])]
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 			tentStatus[reqObject.uniqueId] = failure
