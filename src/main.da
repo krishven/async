@@ -24,13 +24,17 @@ def readConfigFile(fileName):
     subIdList = configHashMap['subjectId'].split(',')    
     resIdList = configHashMap['resourceId'].split(',')
     waitTimeList = configHashMap['waitTime'].split(",")
+    actionList = configHashMap['action'].split(",")
+
     configHashMap['subjectId']=subIdList
     configHashMap['resourceId']=resIdList
     configHashMap['waitTime']=waitTimeList
+    configHashMap['action']=actionList
 
 def main():
     config(clock='Lamport')
     n=1
+    configHashMap['random']=0
     readConfigFile(sys.argv[1])
     numCoordinators = int(configHashMap['numCoordinators'])
     

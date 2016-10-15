@@ -12,13 +12,14 @@ class Client(process):
         subIdList = configHashMap['subjectId']
         resIdList = configHashMap['resourceId']
         waitTimeList = configHashMap['waitTime']
+        actionList = configHashMap['action']
         numClients = int(configHashMap['numClients'])
         numCoordinators = int(configHashMap['numCoordinators'])
         i=clientId[self.id]%numClients
         while(i<len(subIdList)):
             #output("Send another request")
-            print("Waititme:",waitTimeList[i])
-            appReq = common.AppRequest(subIdList[i],resIdList[i],waitTimeList[i],self.id)
+            #print("Waititme:",waitTimeList[i])
+            appReq = common.AppRequest(subIdList[i],resIdList[i],waitTimeList[i],actionList[i],self.id)
             appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
             appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
             #self.subCoId=appReq.subCoId
