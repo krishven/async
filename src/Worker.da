@@ -23,7 +23,7 @@ class Worker(process):
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
 		reqObject.timestamp = time.time()
-		#time.sleep(int(reqObject.waitTime))
+		time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
 
 	def checkUpdate(data, attrName, attrValue):
@@ -139,7 +139,11 @@ class Worker(process):
 				#print(result['value'])
 				continue
 
-			result['value'] = result['value'] or (subCond and resCond)
+			action = rule.find('action')
+			action = action.attrib['name']
+			ac = reqObject.action == action
+
+			result['value'] = result['value'] or (subCond and resCond and ac)
 			#print(result['value'])
 
 			if result['value'] == True:

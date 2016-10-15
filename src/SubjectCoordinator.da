@@ -118,6 +118,7 @@ class SubjectCoordinator(process):
 		tentative[reqObject.uniqueId] = temp
 		tentStatus[reqObject.uniqueId] = ongoing
 
+		time.sleep(int(reqObject.waitTime))
 		if result['update'] == True and result['type'] == 'subject':
 			if (reqObject.subId, result['attrName']) in updates:
 				reqObject.tentativeTime = updates[(reqObject.subId, result['attrName'])]
@@ -145,7 +146,7 @@ class SubjectCoordinator(process):
 				del updates[(reqObject.subId, result['attrName'])]
 			else:
 				updates[(reqObject.subId, result['attrName'])] = reqObject.tentativeTime
-		updates[(reqObject.subId, result['attrName'])]
+
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 			tentStatus[reqObject.uniqueId] = failure
