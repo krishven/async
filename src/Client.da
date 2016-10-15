@@ -1,6 +1,6 @@
 common = import_da('common')
 class Client(process):
-    def setup(configHashMap:dict,subCoIdMap:dict,resCoIdMap:dict,configFile:str): 
+    def setup(configHashMap:dict,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
         self.resumeFlag = False 
         self.appReq = None
         pass #print("poda:",subCoId)
@@ -9,15 +9,21 @@ class Client(process):
         output("hello Client!")
         #readConfigFile(sys.argv[1])
         #print ("myid: ",self.id)
-        subId = configHashMap['subjectId']
-        resId = configHashMap['resourceId']
+        subIdList = configHashMap['subjectId']
+        resIdList = configHashMap['resourceId']
+        numClients = int(configHashMap['numClients'])
         numCoordinators = int(configHashMap['numCoordinators'])
-        appReq = common.AppRequest(subId,resId,self.id)
-        appReq.subCoId = subCoIdMap[int(subId) % (numCoordinators/2)]
-        appReq.resCoId = resCoIdMap[int(resId) % (numCoordinators - numCoordinators/2)]
-        #self.subCoId=appReq.subCoId
-        send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
-        await(self.resumeFlag)
+        i=clientId[self.id]%numClients
+        while(i<len(subIdList)):
+            #output("Send another request")
+            appReq = common.AppRequest(subIdList[i],resIdList[i],self.id)
+            appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
+            appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
+            #self.subCoId=appReq.subCoId
+            send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
+            await(self.resumeFlag)
+            self.resumeFlag=False
+            i+=numClients
         
     def receive(msg = (result,), from_ = subCoId):
         output("Got Response from subco:" ,result['value'])

@@ -55,9 +55,10 @@ class SubjectCoordinator(process):
 				send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.resCoId)
 			else:
 				restartRequest(reqObject)
+				send((reqObject.result,),to=reqObject.clientId)
+
 
 		#sending evaluation status to client		
-		send((reqObject.result,),to=reqObject.clientId)
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=recvProcId):
 		if(reqObject.result['value']):
@@ -65,6 +66,9 @@ class SubjectCoordinator(process):
 		else:
 			removeTentativeEntry(reqObject)
 			restartRequest(reqObject)	
+
+		send((reqObject.result,),to=reqObject.clientId)
+	
 
 	def checkForConflict(reqObject):
 		for attr in reqObject.subRules:
