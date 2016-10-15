@@ -12,13 +12,13 @@ class ResourceCoordinator(process):
 		output("hello Resco!")
 		await(self.clearFlag)
 
-	def receive(msg=(reqObject,), from_=subCoId):
+	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):
 		print("Received from SubCo:",reqObject.subCoId)
-		if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
-			send((reqObject,),to=workerId)
-		elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
-			checkResourceConflict(reqObject)
-			send((reqObject,),to=reqObject.subCoId)
+		send(('POLICY_EVAL_REQUEST',reqObject,),to=workerId)
+
+	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=subCoId):
+		checkResourceConflict(reqObject)
+		send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.subCoId)
 
 	def checkResourceConflict(reqObject):
 		reqObject.result['value'] = True

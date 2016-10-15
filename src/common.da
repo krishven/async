@@ -5,13 +5,6 @@ import xml.etree.ElementTree as ET
 
 database={}
 
-class MsgType(Enum):
-	POLICY_EVAL_REQUEST=1,
-	POLICY_EVAL_RESULT=2,
-	POLICY_CONFLICT_CHECK=3,
-	ATTR_DB_READ=4,
-	ATTR_DB_WRITE=5
-
 def initDB(dbFile):
 	print("DBfile:",dbFile)
 	tree = ET.parse(dbFile)
@@ -45,10 +38,8 @@ class AppRequest():
         self.result = {}
         self.subRules = {}
         self.resRules = {}
-        self.msgType = MsgType.POLICY_EVAL_REQUEST
 
 class DbObject():
 	def __init__(self):
-		self.msgType = None
 		self.reqObject=None
 		self.database={}

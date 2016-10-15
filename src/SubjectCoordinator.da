@@ -1,5 +1,6 @@
 common = import_da('common')
 dbEmulator = import_da('DbEmulator')
+import time
 
 requests = {}
 tentative = {}
@@ -17,56 +18,53 @@ class SubjectCoordinator(process):
 		output("hello SubCo!")
 		await(False)
 
-	def receive(msg=(reqObject,), from_=recvProcId):
-		if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
-			requests[reqObject.uniqueId] = reqObject
-			
-			reqObject.isTentaive = False
-			for key in tentative:
-				temp = tentative[key]
-				if temp['id'] == reqObject.subId or temp['id'] == reqObject.resId:
-					temp['used'] = False
-					reqObject.tentativeUpdate[key] = temp
-					reqObject.isTentative = True
+	def receive(msg=('POLICY_EVAL_REQUEST',reqObject),from_=recvProcId):
+		requests[reqObject.uniqueId] = reqObject
+		
+		reqObject.isTentaive = False
+		for key in tentative:
+			temp = tentative[key]
+			if temp['id'] == reqObject.subId or temp['id'] == reqObject.resId:
+				temp['used'] = False
+				reqObject.tentativeUpdate[key] = temp
+				reqObject.isTentative = True
 
-			print("Send to resco:",reqObject.resCoId)
-			send((reqObject,), to=reqObject.resCoId)
+		print("Send to resco:",reqObject.resCoId)
+		send(('POLICY_EVAL_REQUEST',reqObject,), to=reqObject.resCoId)
 
-		elif(reqObject.msgType == common.MsgType.POLICY_EVAL_RESULT):
-			print("res is:",reqObject.result['value'])
-			if(reqObject.result['value']):
-				if checkForConflict(reqObject) == True:
-					if reqObject.isTentative == False:
-						updateTentativeAttr(reqObject, reqObject.result)
-					else:
-						for key in reqObject.tentativeUpdate:
-							tent = reqObject.tentativeUpdate[key]
-							if tent['used'] == True:
-								await(tentStatus[key] != ongoing)
-								if tentStatus[key] == success:
-									continue
-								else:
-									restartRequest(reqObject)
-									return
-						updateTentativeAttr(reqObject, reqObject.result)
 
-					#send Resource conflict check msg to resource coordinator	
-					reqObject.msgType = common.MsgType.POLICY_CONFLICT_CHECK
-					send((reqObject,),to=reqObject.resCoId)
+	def receive(msg=('POLICY_EVAL_RESULT',reqObject,), from_=recvProcId):
+		print("res is:",reqObject.result['value'])
+		if(reqObject.result['value']):
+			if checkForConflict(reqObject) == True:
+				if reqObject.isTentative == False:
+					updateTentativeAttr(reqObject, reqObject.result)
 				else:
-					restartRequest(reqObject)
+					for key in reqObject.tentativeUpdate:
+						tent = reqObject.tentativeUpdate[key]
+						if tent['used'] == True:
+							await(tentStatus[key] != ongoing)
+							if tentStatus[key] == success:
+								continue
+							else:
+								restartRequest(reqObject)
+								return
+					updateTentativeAttr(reqObject, reqObject.result)
 
-			#sending evaluation status to client		
-			send((reqObject.result,),to=reqObject.clientId)
+				#send Resource conflict check msg to resource coordinator	
+				send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.resCoId)
+			else:
+				restartRequest(reqObject)
 
-		elif(reqObject.msgType == common.MsgType.POLICY_CONFLICT_CHECK):
-				if(reqObject.result['value']):
-					commitTentativeAttr(reqObject)	
-				else:
-					removeTentativeEntry(reqObject)
-					restartRequest(reqObject)	
+		#sending evaluation status to client		
+		send((reqObject.result,),to=reqObject.clientId)
+
+	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=recvProcId):
+		if(reqObject.result['value']):
+			commitTentativeAttr(reqObject)	
 		else:
-			print("Invalid msg")
+			removeTentativeEntry(reqObject)
+			restartRequest(reqObject)	
 
 	def checkForConflict(reqObject):
 		for attr in reqObject.subRules:
@@ -97,9 +95,8 @@ class SubjectCoordinator(process):
 	def commitTentativeAttr(reqObject):
 		commitObj = tentative[reqObject.uniqueId]
 		dbObj = common.DbObject()
-		dbObj.msgType = common.MsgType.ATTR_DB_WRITE
 		dbObj.database = commitObj
-		send((dbObj,),to=dbId)
+		send(('DB_WRITE',dbObj,),to=dbId)
 		tentStatus[reqObject.uniqueId] = success
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
@@ -110,4 +107,6 @@ class SubjectCoordinator(process):
 			tentStatus[reqObject.uniqueId] = failure
 
 	def restartRequest(reqObject):
-		pass
+		output("Restart request")
+		reqObject.timestamp=time.time()
+		send(('POLICY_EVAL_REQUEST',reqObject,),to=self.id)

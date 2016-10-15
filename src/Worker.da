@@ -12,20 +12,16 @@ class Worker(process):
 		output("hello Worker!")
 		await(False)
 
-	def receive(msg=(reqObject,), from_=subCoId):
+	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):	
+		output("Received from ResCo")
+		send(('DB_READ',reqObject,),to=dbId)
 
-		if(reqObject.msgType == common.MsgType.POLICY_EVAL_REQUEST):
-			output("Received from ResCo")
-			reqObject.msgType = common.MsgType.ATTR_DB_READ
-			send((reqObject,),to=dbId)
-
-		elif(reqObject.msgType == common.MsgType.ATTR_DB_READ):
-			output("Read from Db emulator" , reqObject.reqObject)
-			database = reqObject.database
-			reqObject = reqObject.reqObject
-			reqObject.result = evaluatePolicyRequest(database,reqObject)
-			reqObject.msgType = common.MsgType.POLICY_EVAL_RESULT
-			send((reqObject,),to=reqObject.subCoId)
+	def receive(msg=('DB_READ',reqObject,), from_=subCoId):	
+		output("Read from Db emulator" , reqObject.reqObject)
+		database = reqObject.database
+		reqObject = reqObject.reqObject
+		reqObject.result = evaluatePolicyRequest(database,reqObject)
+		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
 
 	def checkUpdate(data, attrName, attrValue):
 		if(attrValue == '++'):
