@@ -139,7 +139,11 @@ class Worker(process):
 				#print(result['value'])
 				continue
 
-			result['value'] = result['value'] or (subCond and resCond)
+			action = rule.find('action')
+			action = action.attrib['name']
+			ac = reqObject.action == action
+
+			result['value'] = result['value'] or (subCond and resCond and ac)
 			#print(result['value'])
 
 			if result['value'] == True:

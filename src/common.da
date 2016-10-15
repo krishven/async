@@ -40,7 +40,7 @@ class AppRequest():
         self.subRules = {}
         self.resRules = {}
         self.waitTime = waitTime
-        self.action=action
+        self.action = action
 
 class DbObject():
 	def __init__(self):

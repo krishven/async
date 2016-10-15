@@ -145,7 +145,7 @@ class SubjectCoordinator(process):
 				del updates[(reqObject.subId, result['attrName'])]
 			else:
 				updates[(reqObject.subId, result['attrName'])] = reqObject.tentativeTime
-		updates[(reqObject.subId, result['attrName'])]
+
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 			tentStatus[reqObject.uniqueId] = failure
