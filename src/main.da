@@ -21,53 +21,7 @@ configHashMap={}
 workerResCoMap={}
 
 
-<<<<<<< HEAD
-=======
-def generateRandomList(numRequests,objType):
-    randList=[]
-    i=0;
-    while (i<numRequests):
-        tempList = configHashMap[objType]
-        index = random.randint(0,len(configHashMap[objType])-1)
-        randList.append(tempList[index])
-        i+=1
 
-    print(randList)    
-    return randList
-
-def generateRandomRequests():
-    random.seed(time.time())
-    numRequests = random.randint(1,10)
-    print("num requests",numRequests) 
-    configHashMap['subjectId'] = generateRandomList(numRequests,'subjectId')
-    configHashMap['resourceId'] = generateRandomList(numRequests,'resourceId')
-    configHashMap['action'] = generateRandomList(numRequests,'action')
-    configHashMap['waitTime'] = generateRandomList(numRequests,'waitTime')
-
-
-def readConfigFile(fileName):
-    with open(fileName) as f:
-            lines = f.read().splitlines()
-    for line in lines:
-        temp = line.split("=")
-        configHashMap[temp[0]]=temp[1] 
-
-    subIdList = configHashMap['subjectId'].split(',')    
-    resIdList = configHashMap['resourceId'].split(',')
-    uniqueIdList = configHashMap['uniqueId'].split(',')
-    waitTimeList = configHashMap['waitTime'].split(",")
-    actionList = configHashMap['action'].split(",")
-    if 'conflict' in configHashMap:
-        configHashMap['conflict'] = True
-    else:
-        configHashMap['conflict'] = False
-
-    configHashMap['subjectId']=subIdList
-    configHashMap['resourceId']=resIdList
-    configHashMap['uniqueId']=uniqueIdList
-    configHashMap['waitTime']=waitTimeList
-    configHashMap['action']=actionList
->>>>>>> c5b01bb41607679637d6ed45f1b1970c524377fe
 
 def main():
     configHashMap = common.readConfigFile(sys.argv[1])
@@ -116,8 +70,6 @@ def main():
     for procId in clientProcIds:
         cliProcessHashMap[procId]=i
         i+=1   
-
-    print ("hello",len(workerProcIds))
 
     setup(subCoProcIds,(sys.argv[1],dbEmulatorId,))
     setup(resCoProcIds,(sys.argv[1],workerProcIds,workerResCoMap,))

@@ -1,0 +1,14 @@
+numCoordinators=6
+numClients=2
+subjectId=1,3,5
+resourceId=4,4,6
+waitTime=0,0,0
+action=read,view,read
+numWorkers=1,1,1
+dbFile=database.xml
+random=1
+randomSeed=4
+numRequests=7
+minDbLatency=5
+maxDbLatency=10
+uniqueId=0,0,0

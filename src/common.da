@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 database={}
 configHashMap={}
 
+
 def readConfigFile(fileName):
     with open(fileName) as f:
             lines = f.read().splitlines()
@@ -15,16 +16,25 @@ def readConfigFile(fileName):
 
     subIdList = configHashMap['subjectId'].split(',')    
     resIdList = configHashMap['resourceId'].split(',')
+    uniqueIdList = configHashMap['uniqueId'].split(',')
     waitTimeList = configHashMap['waitTime'].split(",")
     actionList = configHashMap['action'].split(",")
     numWorkersList = configHashMap['numWorkers'].split(",")
+    
+    if 'conflict' in configHashMap:
+        configHashMap['conflict'] = True
+    else:
+        configHashMap['conflict'] = False
 
     configHashMap['subjectId']=subIdList
     configHashMap['resourceId']=resIdList
+    configHashMap['uniqueId']=uniqueIdList
     configHashMap['waitTime']=waitTimeList
     configHashMap['action']=actionList
     configHashMap['numWorkers']=numWorkersList
     return configHashMap
+
+
 
 def initDB(dbFile):
 	#print("DBfile:",dbFile)

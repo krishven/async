@@ -27,7 +27,7 @@ class DbEmulator(process):
 		#output("DbEmulator: received attribute write")
 		if('minDbLatency' in self.configHashMap and 'maxDbLatency' in self.configHashMap):
 			delay = random.randint(int(configHashMap['minDbLatency']),int(configHashMap['maxDbLatency']))
-			Output("Latency:",delay)
+			output("Latency:",delay)
 			time.sleep(delay)
 		temp = self.dbObj.database[reqObject.database['id']]
 		temp[reqObject.database['attrName']] = reqObject.database['attrValue']

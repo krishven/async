@@ -23,11 +23,12 @@ class Client(process):
         return randList
 
     def generateRandomRequests():
-        random.seed(configHashMap['randomSeed'])
+        random.seed(self.configHashMap['randomSeed'])
         self.configHashMap['subjectId'] = generateRandomList('subjectId')
         self.configHashMap['resourceId'] = generateRandomList('resourceId')
         self.configHashMap['action'] = generateRandomList('action')
         self.configHashMap['waitTime'] = generateRandomList('waitTime')
+        self.configHashMap['uniqueId'] = generateRandomList('uniqueId')
 
     def run():
         #output("hello Client!")
