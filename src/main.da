@@ -25,16 +25,13 @@ workerResCoMap={}
 
 def main():
     configHashMap = common.readConfigFile(sys.argv[1])
-    numWorkers=0
-    totalWorkers=0
-    numWorkersList = configHashMap['numWorkers']
-    for numWorkers in numWorkersList:
-        totalWorkers +=int(numWorkers)
-
     numCoordinators = int(configHashMap['numCoordinators'])
-    
+    numResCoordinators = numCoordinators - int(numCoordinators/2) 
+    numWorkers = int(configHashMap['numWorkers'])
+    totalWorkers = numWorkers * numResCoordinators
+
     subCoProcIds = new(subject.SubjectCoordinator, num = int(numCoordinators/2))
-    resCoProcIds = new(resource.ResourceCoordinator, num = numCoordinators - int(numCoordinators/2) )
+    resCoProcIds = new(resource.ResourceCoordinator, num = numResCoordinators )
     clientProcIds = new(client.Client, num=int(configHashMap['numClients']))
     workerProcIds = new(worker.Worker, num=totalWorkers)
     dbEmulatorId = new(dbEmulator.DbEmulator,num=1)
@@ -58,7 +55,7 @@ def main():
         resProcessHashMap[i]=procId
         #print("numworkers",numWorkersList[i])
         j=0
-        while(j<int(numWorkersList[i])):
+        while(j<numWorkers):
             workerList.append(workerProcHashMap[k])
             j+=1
             k+=1
