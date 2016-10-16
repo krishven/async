@@ -25,9 +25,19 @@ class Worker(process):
 		reqObject.timestamp = time.time()
 		database = reqObject.database
 		reqObject = reqObject.reqObject
-		reqObject.result = evaluatePolicyRequest(database,reqObject)
+		reqObject.result = evaluatePolicyRequest(database, reqObject)
 		time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
+
+	def checkValue(db, attrValue, sid, rid):
+		if '$' not in attrValue:
+			return attrValue
+		elif 'subject' in attrValue:
+			data = db[sid]
+			return data['name']
+		elif 'resource' in attrValue:
+			data = db[rid]
+			return data['name']
 
 	def checkUpdate(data, attrName, attrValue):
 		if(attrValue == '++'):
@@ -56,7 +66,7 @@ class Worker(process):
 
 		return cond
 			
-	def evaluatePolicyRequest(database,reqObject):
+	def evaluatePolicyRequest(database, reqObject):
 
 		tree = ET.parse('../config/policy-example.xml')
 		root = tree.getroot()
@@ -75,6 +85,9 @@ class Worker(process):
 			for attrName, attrValue in sc.items():
 				#print "%s = %s" % (attrName, attrValue)
 				subRule.append(attrName)
+
+				if '$' in attrValue:
+					attrValue = checkValue(database, attrValue, reqObject.subId, reqObject.resId)
 
 				if reqObject.isTentative == True:
 					for key in reqObject.tentativeUpdate:
@@ -113,6 +126,9 @@ class Worker(process):
 			for attrName, attrValue in rc.items():
 				#print "%s = %s" % (attrName, attrValue)
 				resRule.append(attrName)
+
+				if '$' in attrValue:
+					attrValue = checkValue(database, attrValue, reqObject.subId, reqObject.resId)
 
 				if reqObject.isTentative == True:
 					for key in reqObject.tentativeUpdate:
@@ -182,5 +198,8 @@ class Worker(process):
 			#if ru != None:
 				#print('resource update', ru.attrib)
 			#print()
-		output(reqObject.subId,reqObject.action,reqObject.resId,':', 'Policy evaluation result:',result['value'])
+		if result['value'] == True:
+			output(reqObject.subId,reqObject.action,reqObject.resId, rule.attrib['name'], result['value'])
+		else:
+			output(reqObject.subId,reqObject.action,reqObject.resId, result['value'])
 		return result

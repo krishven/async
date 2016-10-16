@@ -4,74 +4,79 @@ import random
 import time
 
 class Client(process):
-    def setup(configFile:str,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
-        self.resumeFlag = False 
-        self.configHashMap={}
-        pass #print("poda:",subCoId)
+	def setup(configFile:str,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
+		self.resumeFlag = False 
+		self.configHashMap={}
+		pass #print("poda:",subCoId)
 
-    def generateRandomList(objType):
-        randList=[]
-        i=0;
-        numRequests = int(self.configHashMap['numRequests'])
-        while (i<numRequests):
-            tempList = self.configHashMap[objType]
-            index = random.randint(0,len(self.configHashMap[objType])-1)
-            randList.append(tempList[index])
-            i+=1
+	def generateRandomList(objType):
+		randList=[]
+		i=0;
+		numRequests = int(self.configHashMap['numRequests'])
+		while (i<numRequests):
+			tempList = self.configHashMap[objType]
+			index = random.randint(0,len(self.configHashMap[objType])-1)
+			randList.append(tempList[index])
+			i+=1
 
-        print(randList)    
-        return randList
+		print(randList)    
+		return randList
 
-    def generateRandomRequests():
-        random.seed(self.configHashMap['randomSeed'])
-        self.configHashMap['subjectId'] = generateRandomList('subjectId')
-        self.configHashMap['resourceId'] = generateRandomList('resourceId')
-        self.configHashMap['action'] = generateRandomList('action')
-        self.configHashMap['waitTime'] = generateRandomList('waitTime')
-        self.configHashMap['uniqueId'] = generateRandomList('uniqueId')
+	def generateRandomRequests():
+		random.seed(self.configHashMap['randomSeed'])
+		self.configHashMap['subjectId'] = generateRandomList('subjectId')
+		self.configHashMap['resourceId'] = generateRandomList('resourceId')
+		self.configHashMap['action'] = generateRandomList('action')
+		self.configHashMap['waitTime'] = generateRandomList('waitTime')
+		self.configHashMap['uniqueId'] = generateRandomList('uniqueId')
 
-    def run():
-        #output("hello Client!")
-        
-        #configHashMap['random']=0
-        self.configHashMap = common.readConfigFile(configFile)
-        if('random' not in self.configHashMap):
-            self.configHashMap['random']=0
-        if(int(self.configHashMap['random'])==1):
-            generateRandomRequests()
+	def run():
+		#output("hello Client!")
+		
+		#configHashMap['random']=0
+		self.configHashMap = common.readConfigFile(configFile)
+		if('random' not in self.configHashMap):
+			self.configHashMap['random']=0
+		if(int(self.configHashMap['random'])==1):
+			generateRandomRequests()
 
-        #readConfigFile(sys.argv[1])
-        #print ("myid: ",self.id)
-        subIdList = configHashMap['subjectId']
-        resIdList = configHashMap['resourceId']
-        uniqueIdList = configHashMap['uniqueId']
-        waitTimeList = configHashMap['waitTime']
-        actionList = configHashMap['action']
-        numClients = int(configHashMap['numClients'])
-        numCoordinators = int(configHashMap['numCoordinators'])
-        i=clientId[self.id]%numClients
+		#readConfigFile(sys.argv[1])
+		#print ("myid: ",self.id)
+		subIdList = configHashMap['subjectId']
+		resIdList = configHashMap['resourceId']
+		uniqueIdList = configHashMap['uniqueId']
+		waitTimeList = configHashMap['waitTime']
+		actionList = configHashMap['action']
+		numClients = int(configHashMap['numClients'])
+		numCoordinators = int(configHashMap['numCoordinators'])
+		i=clientId[self.id]%numClients
 
-        #print("Length of subidlist",len(subIdList))
-        
-        while(i<len(subIdList)):
-            #output("Send another request")
-            #print("Waititme:",waitTimeList[i])
-            appReq = common.AppRequest(subIdList[i],resIdList[i],waitTimeList[i],actionList[i],self.id)
-            appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
-            appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
-            #self.subCoId=appReq.subCoId
-            appReq.testConflict = configHashMap['conflict']
-            if uniqueIdList[i] != '0':
-                appReq.uniqueId = uniqueIdList[i]
-            if appReq.uniqueId == '1':
-                appReq.testFail = False
-            if appReq.uniqueId == '2':
-                time.sleep(2)
-            send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
-            await(self.resumeFlag)
-            self.resumeFlag=False
-            i+=numClients
-        
-    def receive(msg = (reqObject,), from_ = subCoId):
-        output(reqObject.subId,reqObject.action,reqObject.resId,':', reqObject.result['value'])
-        self.resumeFlag = True
+		#print("Length of subidlist",len(subIdList))
+		
+		while(i<len(subIdList)):
+			#output("Send another request")
+			#print("Waititme:",waitTimeList[i])
+			appReq = common.AppRequest(subIdList[i],resIdList[i],waitTimeList[i],actionList[i],self.id)
+			appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
+			appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
+			#self.subCoId=appReq.subCoId
+
+			if 'conflict' in configHashMap:
+				appReq.testConflict = True
+			else:
+				appReq.testConflict = False
+
+			if uniqueIdList[i] != '0':
+				appReq.uniqueId = uniqueIdList[i]
+			if appReq.uniqueId == '1':
+				appReq.testFail = False
+			if appReq.uniqueId == '2':
+				time.sleep(2)
+			send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
+			await(self.resumeFlag)
+			self.resumeFlag=False
+			i+=numClients
+		
+	def receive(msg = (reqObject,), from_ = subCoId):
+		output(reqObject.subId,reqObject.action,reqObject.resId,':', reqObject.result['value'])
+		self.resumeFlag = True

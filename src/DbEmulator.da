@@ -25,6 +25,7 @@ class DbEmulator(process):
 	def receive(msg=('DB_READ',reqObject,), from_=srcId):
 		#output("DbEmulator: received attribute read")
 		self.dbObj.reqObject = reqObject
+		output('Read from database')
 		send(('DB_READ',self.dbObj,),to=srcId)
 
 	def receive(msg=('DB_WRITE',reqObject,), from_=srcId):
@@ -36,5 +37,6 @@ class DbEmulator(process):
 		temp = self.dbObj.database[reqObject.database['id']]
 		temp[reqObject.database['attrName']] = reqObject.database['attrValue']
 		self.dbObj.database[reqObject.database['id']] = temp
+		output('Written to database')
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(self.dbObj.database)

@@ -43,6 +43,7 @@ class SubjectCoordinator(process):
 	def receive(msg=('POLICY_EVAL_RESULT',reqObject,), from_=recvProcId):
 		#print("res is:",reqObject.result['value'])
 		if checkForConflict(reqObject) == True:
+			output('No conflict in SC')
 			if reqObject.isTentative == False:
 				updateTentativeAttr(reqObject, reqObject.result)
 			else:
@@ -93,16 +94,19 @@ class SubjectCoordinator(process):
 							waiting[tent['parent']] = [obj]
 						return
 					elif tentStatus[key] == success:
-						output('Tentative parent success')
+						output('Tentative parent success, checking for other dependencies')
 						continue
 					else:
 						output('Tentative parent failed, so restarting child')
 						restartRequest(obj)
 						return
+
+		output('All tentative parents succeeded')
 		updateTentativeAttr(obj, obj.result)
 		send(('POLICY_CONFLICT_CHECK',obj,),to=obj.resCoId)
 
 	def checkForConflict(reqObject):
+		output('Checking for conflict')
 		result = reqObject.result
 		for attr in reqObject.subRules:
 			#print(attr)
@@ -132,6 +136,8 @@ class SubjectCoordinator(process):
 			if (reqObject.subId, result['attrName']) in updates:
 				reqObject.tentativeTime = updates[(reqObject.subId, result['attrName'])]
 			updates[(reqObject.subId, result['attrName'])] = time.time()
+
+		output('Writing to tentative')
 		output('Subject Updates')
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(updates)
@@ -142,9 +148,9 @@ class SubjectCoordinator(process):
 		commitObj = tentative[reqObject.uniqueId]
 		dbObj = common.DbObject()
 		dbObj.database = commitObj
-		send(('DB_WRITE',dbObj,),to=dbId)
 		tentStatus[reqObject.uniqueId] = success
-		output('Tentative success, checking dependents')
+		output('Tentative success, committing to db')
+		send(('DB_WRITE',dbObj,),to=dbId)
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 		if reqObject.uniqueId in waiting:
