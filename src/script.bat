@@ -1,0 +1,1 @@
+python -m da --logfilename Log\debug.log --logdir Log -F info -f main.da ..\config\config.txt
