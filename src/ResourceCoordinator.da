@@ -11,11 +11,11 @@ class ResourceCoordinator(process):
 		self.clearFlag=False
 
 	def run():
-		output("hello Resco!")
+		#output("hello Resco!")
 		await(self.clearFlag)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):
-		print("Received from SubCo:",reqObject.subCoId)
+		#print("Received from SubCo:",reqObject.subCoId)
 		send(('POLICY_EVAL_REQUEST',reqObject,),to=workerId)
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=subCoId):
@@ -24,16 +24,22 @@ class ResourceCoordinator(process):
 
 	def checkResourceConflict(reqObject):
 		result = reqObject.result
-		reqObject.result['value'] = True
+		reqObject.conflict = False
 		for attr in reqObject.resRules:
 			if (reqObject.resId, attr) in updates:
 				updateTime = updates[(reqObject.resId, attr)]
 				if updateTime >= reqObject.timestamp:
-					reqObject.result['value'] = False
+					reqObject.conflict = True
 					output('Conflict in ResourceCoordinator')
 					return
 
 		time.sleep(int(reqObject.waitTime))
+		if reqObject.uniqueId == '1' and reqObject.testFail == False:
+			time.sleep(5)
+			reqObject.testFail = True
+			reqObject.conflict = True
+			output('Conflict in ResourceCoordinator')
+			return
 		if result['update'] == True and result['type'] == 'resource':
 			updates[(reqObject.resId, result['attrName'])] = time.time()
 		print('Resource Updates',updates)

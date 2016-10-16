@@ -1,4 +1,6 @@
 common = import_da('common')
+import time
+
 class Client(process):
     def setup(configHashMap:dict,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
         self.resumeFlag = False 
@@ -6,11 +8,12 @@ class Client(process):
         pass #print("poda:",subCoId)
 
     def run():
-        output("hello Client!")
+        #output("hello Client!")
         #readConfigFile(sys.argv[1])
         #print ("myid: ",self.id)
         subIdList = configHashMap['subjectId']
         resIdList = configHashMap['resourceId']
+        uniqueIdList = configHashMap['uniqueId']
         waitTimeList = configHashMap['waitTime']
         actionList = configHashMap['action']
         numClients = int(configHashMap['numClients'])
@@ -23,11 +26,17 @@ class Client(process):
             appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
             appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
             #self.subCoId=appReq.subCoId
+            if uniqueIdList[i] != '0':
+                appReq.uniqueId = uniqueIdList[i]
+            if appReq.uniqueId == '1':
+                appReq.testFail = False
+            if appReq.uniqueId == '2':
+                time.sleep(2)
             send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
             await(self.resumeFlag)
             self.resumeFlag=False
             i+=numClients
         
     def receive(msg = (result,), from_ = subCoId):
-        output("Got Response from subco:" ,result['value'])
+        output("Got Response from subco:", result['value'])
         self.resumeFlag = True

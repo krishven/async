@@ -10,15 +10,15 @@ class Worker(process):
 	def setup(dbId: dbEmulator.DbEmulator, configHasHMap:dict):pass
 
 	def run():
-		output("hello Worker!")
+		#output("hello Worker!")
 		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):	
-		output("Received from ResCo")
+		#output("Received from ResCo")
 		send(('DB_READ',reqObject,),to=dbId)
 
 	def receive(msg=('DB_READ',reqObject,), from_=subCoId):	
-		output("Read from Db emulator" , reqObject.reqObject)
+		#output("Read from Db emulator" , reqObject.reqObject)
 		database = reqObject.database
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
@@ -179,4 +179,5 @@ class Worker(process):
 			#if ru != None:
 				#print('resource update', ru.attrib)
 			#print()
+		print('Policy evaluation result:',result['value'])
 		return result
