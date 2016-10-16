@@ -62,7 +62,12 @@ class Client(process):
 			appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
 			appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
 			#self.subCoId=appReq.subCoId
-			appReq.testConflict = configHashMap['conflict']
+
+			if 'conflict' in configHashMap:
+				appReq.testConflict = True
+			else:
+				appReq.testConflict = False
+
 			if uniqueIdList[i] != '0':
 				appReq.uniqueId = uniqueIdList[i]
 			if appReq.uniqueId == '1':

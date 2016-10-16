@@ -11,16 +11,11 @@ def readConfigFile(fileName):
 		temp = line.split("=")
 		configHashMap[temp[0]]=temp[1] 
 
-	subIdList = configHashMap['subjectId'].split(',')	
-	resIdList = configHashMap['resourceId'].split(',')
-	uniqueIdList = configHashMap['uniqueId'].split(',')
-	waitTimeList = configHashMap['waitTime'].split(",")
-	actionList = configHashMap['action'].split(",")
-	
-	if 'conflict' in configHashMap:
-		configHashMap['conflict'] = True
-	else:
-		configHashMap['conflict'] = False
+    subIdList = configHashMap['subjectId'].split(',')    
+    resIdList = configHashMap['resourceId'].split(',')
+    uniqueIdList = configHashMap['uniqueId'].split(',')
+    waitTimeList = configHashMap['waitTime'].split(",")
+    actionList = configHashMap['action'].split(",")
 
 	configHashMap['subjectId']=subIdList
 	configHashMap['resourceId']=resIdList

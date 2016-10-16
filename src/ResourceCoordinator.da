@@ -56,6 +56,7 @@ class ResourceCoordinator(process):
 			return
 		if result['update'] == True and result['type'] == 'resource':
 			updates[(reqObject.resId, result['attrName'])] = time.time()
+		output('No conflict in RC')
 		output('Resource Updates')
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(updates)
