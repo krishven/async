@@ -1,12 +1,42 @@
 common = import_da('common')
+import random
+
 class Client(process):
-    def setup(configHashMap:dict,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
+    def setup(configFile:str,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
         self.resumeFlag = False 
-        self.appReq = None
+        self.configHashMap={}
         pass #print("poda:",subCoId)
+
+    def generateRandomList(objType):
+        randList=[]
+        i=0;
+        numRequests = int(self.configHashMap['numRequests'])
+        while (i<numRequests):
+            tempList = self.configHashMap[objType]
+            index = random.randint(0,len(self.configHashMap[objType])-1)
+            randList.append(tempList[index])
+            i+=1
+
+        print(randList)    
+        return randList
+
+    def generateRandomRequests():
+        random.seed(configHashMap['randomSeed'])
+        self.configHashMap['subjectId'] = generateRandomList('subjectId')
+        self.configHashMap['resourceId'] = generateRandomList('resourceId')
+        self.configHashMap['action'] = generateRandomList('action')
+        self.configHashMap['waitTime'] = generateRandomList('waitTime')
 
     def run():
         output("hello Client!")
+        
+        #configHashMap['random']=0
+        self.configHashMap = common.readConfigFile(configFile)
+        if('random' not in self.configHashMap):
+            self.configHashMap['random']=0
+        if(int(self.configHashMap['random'])==1):
+            generateRandomRequests()
+
         #readConfigFile(sys.argv[1])
         #print ("myid: ",self.id)
         subIdList = configHashMap['subjectId']
@@ -17,8 +47,7 @@ class Client(process):
         numCoordinators = int(configHashMap['numCoordinators'])
         i=clientId[self.id]%numClients
 
-        print("Length of subidlist",len(subIdList))
-        
+
         while(i<len(subIdList)):
             #output("Send another request")
             #print("Waititme:",waitTimeList[i])

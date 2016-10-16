@@ -1,11 +1,19 @@
 common = import_da('common')
+import random
+import time
+#configHashMap={}
 class DbEmulator(process):
-	def setup(configHasHMap:dict):
+	def setup(configFile:str):
 		self.dbObj = common.DbObject()
+		self.configHashMap={}
+
 	def run():
-		output("hello DbEmulator!",configHasHMap['dbFile'])
-		database = common.initDB(configHasHMap['dbFile'])
+		output("hello DbEmulator!")
+
+		self.configHashMap = common.readConfigFile(configFile)
+		database = common.initDB(configHashMap['dbFile'])
 		self.dbObj.database = database
+		random.seed(self.configHashMap['randomSeed'])
 		await(False)
 
 	def receive(msg=('DB_READ',reqObject,), from_=srcId):
@@ -15,7 +23,11 @@ class DbEmulator(process):
 
 	def receive(msg=('DB_WRITE',reqObject,), from_=srcId):
 		output("DbEmulator: received attribute write")
+		if('minDbLatency' in self.configHashMap and 'maxDbLatency' in self.configHashMap):
+			delay = random.randint(int(configHashMap['minDbLatency']),int(configHashMap['maxDbLatency']))
+			Output("Latency:",delay)
+			time.sleep(delay)
 		temp = self.dbObj.database[reqObject.database['id']]
 		temp[reqObject.database['attrName']] = reqObject.database['attrValue']
 		self.dbObj.database[reqObject.database['id']] = temp
-		print ("database:",self.dbObj.database)
+		output ("database:",self.dbObj.database)

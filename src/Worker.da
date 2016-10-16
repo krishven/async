@@ -7,10 +7,12 @@ import time
 result = {}
 
 class Worker(process):
-	def setup(dbId: dbEmulator.DbEmulator, configHasHMap:dict):pass
+	def setup(configFile:str,dbId: dbEmulator.DbEmulator):
+		self.configHashMap={}
 
 	def run():
 		output("hello Worker!")
+		self.configHashMap = common.readConfigFile(configFile)
 		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):	

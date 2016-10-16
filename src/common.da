@@ -4,6 +4,27 @@ from enum import Enum
 import xml.etree.ElementTree as ET
 
 database={}
+configHashMap={}
+
+def readConfigFile(fileName):
+    with open(fileName) as f:
+            lines = f.read().splitlines()
+    for line in lines:
+        temp = line.split("=")
+        configHashMap[temp[0]]=temp[1] 
+
+    subIdList = configHashMap['subjectId'].split(',')    
+    resIdList = configHashMap['resourceId'].split(',')
+    waitTimeList = configHashMap['waitTime'].split(",")
+    actionList = configHashMap['action'].split(",")
+    numWorkersList = configHashMap['numWorkers'].split(",")
+
+    configHashMap['subjectId']=subIdList
+    configHashMap['resourceId']=resIdList
+    configHashMap['waitTime']=waitTimeList
+    configHashMap['action']=actionList
+    configHashMap['numWorkers']=numWorkersList
+    return configHashMap
 
 def initDB(dbFile):
 	print("DBfile:",dbFile)

@@ -9,94 +9,74 @@ resource = import_da('ResourceCoordinator')
 client = import_da('Client')
 worker = import_da('Worker')
 dbEmulator = import_da('DbEmulator')
+common = import_da('common')
 
 
 #configHashMap={}
 subProcessHashMap={}
 resProcessHashMap={}
 cliProcessHashMap={}
+workerProcHashMap={}
 configHashMap={}
+workerResCoMap={}
 
 
-def generateRandomList(numRequests,objType):
-    randList=[]
-    i=0;
-    while (i<numRequests):
-        tempList = configHashMap[objType]
-        index = random.randint(0,len(configHashMap[objType])-1)
-        randList.append(tempList[index])
-        i+=1
-
-    print(randList)    
-    return randList
-
-def generateRandomRequests():
-    random.seed(time.time())
-    numRequests = random.randint(1,10)
-    print("num requests",numRequests) 
-    configHashMap['subjectId'] = generateRandomList(numRequests,'subjectId')
-    configHashMap['resourceId'] = generateRandomList(numRequests,'resourceId')
-    configHashMap['action'] = generateRandomList(numRequests,'action')
-    configHashMap['waitTime'] = generateRandomList(numRequests,'waitTime')
-
-
-def readConfigFile(fileName):
-    with open(fileName) as f:
-            lines = f.read().splitlines()
-    for line in lines:
-        temp = line.split("=")
-        configHashMap[temp[0]]=temp[1] 
-
-    subIdList = configHashMap['subjectId'].split(',')    
-    resIdList = configHashMap['resourceId'].split(',')
-    waitTimeList = configHashMap['waitTime'].split(",")
-    actionList = configHashMap['action'].split(",")
-
-    configHashMap['subjectId']=subIdList
-    configHashMap['resourceId']=resIdList
-    configHashMap['waitTime']=waitTimeList
-    configHashMap['action']=actionList
 
 def main():
-    config(clock='Lamport')
-    n=1
-
-    configHashMap['random']=0
-    readConfigFile(sys.argv[1])
-
-    if(int(configHashMap['random'])==1):
-        generateRandomRequests()
+    configHashMap = common.readConfigFile(sys.argv[1])
+    numWorkers=0
+    totalWorkers=0
+    numWorkersList = configHashMap['numWorkers']
+    for numWorkers in numWorkersList:
+        totalWorkers +=int(numWorkers)
 
     numCoordinators = int(configHashMap['numCoordinators'])
     
     subCoProcIds = new(subject.SubjectCoordinator, num = int(numCoordinators/2))
     resCoProcIds = new(resource.ResourceCoordinator, num = numCoordinators - int(numCoordinators/2) )
     clientProcIds = new(client.Client, num=int(configHashMap['numClients']))
-    workerProcIds = new(worker.Worker, num=int(configHashMap['numWorkers']))
+    workerProcIds = new(worker.Worker, num=totalWorkers)
     dbEmulatorId = new(dbEmulator.DbEmulator,num=1)
 
  #   setup(subCoProcIds
     i=0
+
     for procId in subCoProcIds:
-        subProcessHashMap[i]=procId
+        subProcessHashMap[i]=procId           
         i+=1
 
     i=0
+    for procId in workerProcIds:
+        workerProcHashMap[i] =procId
+        i+=1   
+
+    i=0
+    k=0
     for procId in resCoProcIds:
+        workerList=[]
         resProcessHashMap[i]=procId
+        #print("numworkers",numWorkersList[i])
+        j=0
+        while(j<int(numWorkersList[i])):
+            workerList.append(workerProcHashMap[k])
+            j+=1
+            k+=1
+        workerResCoMap[procId] = workerList    
         i+=1
 
 
     i=0
     for procId in clientProcIds:
         cliProcessHashMap[procId]=i
-        i+=1
+        i+=1   
 
-    setup(subCoProcIds,(dbEmulatorId,))
-    setup(resCoProcIds,(workerProcIds,configHashMap))
-    setup(clientProcIds,(configHashMap,subProcessHashMap,resProcessHashMap,cliProcessHashMap,))
-    setup(workerProcIds,(dbEmulatorId,configHashMap,))
-    setup(dbEmulatorId,(configHashMap,))
+    print ("hello",len(workerProcIds))
+
+    setup(subCoProcIds,(sys.argv[1],dbEmulatorId,))
+    setup(resCoProcIds,(sys.argv[1],workerProcIds,workerResCoMap,))
+    setup(clientProcIds,(sys.argv[1],subProcessHashMap,resProcessHashMap,cliProcessHashMap,))
+    setup(workerProcIds,(sys.argv[1],dbEmulatorId,))
+    setup(dbEmulatorId,(sys.argv[1],))
     start(dbEmulatorId)    
     start(subCoProcIds)
     start(resCoProcIds)

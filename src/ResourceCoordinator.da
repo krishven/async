@@ -7,16 +7,23 @@ import time
 updates = {}
 
 class ResourceCoordinator(process):
-	def setup(workerId:Worker,configHasHMap:dict): 
-		self.clearFlag=False
+	def setup(configFile:str,workerIdList:Worker,workerResCoMap:dict):
+		self.configHashMap={}
+		self.count=0
+		self.numWorkers=0
 
 	def run():
 		output("hello Resco!")
-		await(self.clearFlag)
+		self.configHashMap = common.readConfigFile(configFile)
+		self.numWorkers = len(workerResCoMap[self.id])
+		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):
 		print("Received from SubCo:",reqObject.subCoId)
-		send(('POLICY_EVAL_REQUEST',reqObject,),to=workerId)
+		workerList = workerResCoMap[self.id]
+		#print("W:",workerId)	
+		send(('POLICY_EVAL_REQUEST',reqObject,),to=workerList[self.count%self.numWorkers])
+		self.count+=1
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=subCoId):
 		checkResourceConflict(reqObject)

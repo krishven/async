@@ -13,10 +13,12 @@ success = 2
 failure = 3
 
 class SubjectCoordinator(process):
-	def setup(dbId:dbEmulator.DbEmulator):pass
+	def setup(configFile:str,dbId:dbEmulator.DbEmulator):
+		self.configHashMap={}
 
 	def run():
 		output("hello SubCo!")
+		self.configHashMap = common.readConfigFile(configFile)
 		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject),from_=recvProcId):
