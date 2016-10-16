@@ -206,5 +206,5 @@ class Worker(process):
 		if result['value'] == True:
 			output(reqObject.subId,reqObject.action,reqObject.resId, rule.attrib['name'], result['value'])
 		else:
-			output(reqObject.subId,reqObject.action,reqObject.resId, result['value'])
+			output(reqObject.subId,reqObject.action,reqObject.resId, 'Policy eval:', result['value'])
 		return result

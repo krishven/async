@@ -44,6 +44,7 @@ class DbEmulator(process):
 		output('Written to database')
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(self.dbObj.database)
+		output("Database:",self.dbObj.database,level=logging.DEBUG)
 
 	def initDB(dbFile):
 		#print("DBfile:",dbFile)

@@ -1,0 +1,107 @@
+Rules:
+-----
+
+subid 1 - user A (history = empty)
+subid 3 - user B (history = bank B)
+subid 5 - user C
+resid 2 - bank A
+resid 4 - bank B
+resid 6 - movie(Avengers) viewcount - 0
+
+Based on the data in database.xml and rules to match in policy-example.xml, we
+can say that only the following cases would return True:
+
+user A can read any bank for first time and continue reading same bank
+user B already read bank B, so can read only bank B
+user C can view the movie Avengers till its viewcount is 5
+
+Any other combination is False, for example:
+
+user C cannot "read" movie Avengers only "view"
+user B cannot "view" Bank B only "read"
+user B cannot read Bank A
+user A cannot view the movie etc
+
+
+Basic test cases:
+----------------
+
+file: config/basic.txt
+
+A basic configuration without random requests.
+
+1 tries to read 2 - success, history of user A is bank A now
+5 tries to read 6 - failure, since it can only "view" 6
+5 tries to view 6 - success, viewcount of 6 is 1 now
+
+Random test cases:
+-----------------
+
+file: config/config.txt
+
+Takes a set of ids and actions, minDbLatency, max DbLatency, generates random requests and evaluates them.
+
+Outputs should agree with the Rules defined at the beginning.
+
+Stress testing:
+--------------
+
+file: config/stres.txt
+
+Takes a set of ids and actions, minDbLatency, max DbLatency, generates 1000
+random requests and evaluates them.
+
+Outputs should not have any error and should also agree with the rules defined
+at the start.
+
+Subject coordinator conflict:
+----------------------------
+
+file: config/scconflict.txt
+
+Two requests with subject id 1 and resource id 2 are generated at the same time.
+Both match "Access bank A for first time" rule. But this is a conflict since
+only one can access for first time and other should match "Access bank A again"
+rule. So a conflict occurs in SC and one request is restarted, it matches the 
+"Access bank A again" rule and returns True to the client.
+
+Resource coordinator conflict:
+-----------------------------
+
+file: config/rcconflict.txt
+
+Two requests with subject id 5 and resource id 6 are generated at the same time.
+Both match "viewcount < 5" rule and increment viewcount. But this is a conflict since viewcount has been incremented from 0 to 1 by both but actually viewcount
+should be 2. So one request hits a conflict in RC, restarts and increments
+viewcount from 1 to 2, then updates the database.
+
+Wait and Abort a request based on Tentative:
+-------------------------------------------
+
+file: config/waitaborttentative.txt
+
+Config file has parameters to introduce artificial delays to block one request
+at RC conflict check so that another request can read from Tentative and
+worker evaluates based on this tentative attribute. 
+
+1 reads 2, now tentative has history of 1 as bank A. This request is blocked in
+RC conflict check. Another request for 1 read 3 comes, reads history of 1 from
+tentative, worker evaluates to False based on tentative, this request now waits
+in SC for the first request to return. Once 1st request returns and is
+successful (i.e no conflict), this second evaluation proceeds since its parent
+is successful and returns False i.e Abort to client.
+
+Fail and Restart due to Tentative:
+---------------------------------
+
+file: config/failrestarttentative.txt
+
+Config file has parameters to introduce artificial delays to block one request
+at RC conflict check and also introduce artificial conflict so that another request can read from Tentative, then restart because parent tentative failed.
+
+Req1 5 views 6, updates tentative attribute viewcount as 1, goes for conflict
+check in RC and waits. Now Req2 5 views 6 reads viewcount from tentative,
+worker evaluates. Meanwhile due to an artificial conflict introduced in RC for
+Req1, it fails and restarts. When Req2 comes back to SC after evaluation, it
+checks for parent tentative which has failed, so Req2 restarts too. Now both
+requests proceed normally and update viewcount as 2 in the database.
