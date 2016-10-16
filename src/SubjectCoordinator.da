@@ -163,7 +163,7 @@ class SubjectCoordinator(process):
 		dbObj.database = commitObj
 		tentStatus[reqObject.uniqueId] = success
 		output('Tentative success, committing to db')
-		send(('DB_WRITE',dbObj,),to=dbId
+		send(('DB_WRITE',dbObj,),to=dbId)
 		output("Sent content from SC(COMMIT) to DB:",reqObject,level=logging.DEBUG)
 		tentStatus[reqObject.uniqueId] = success
 		output('Tentative success, checking dependents')
