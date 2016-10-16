@@ -1,78 +1,71 @@
 import time
 import uuid
-from enum import Enum
-import xml.etree.ElementTree as ET
 
-database={}
 configHashMap={}
 
 
 def readConfigFile(fileName):
-    with open(fileName) as f:
-            lines = f.read().splitlines()
-    for line in lines:
-        temp = line.split("=")
-        configHashMap[temp[0]]=temp[1] 
+	with open(fileName) as f:
+			lines = f.read().splitlines()
+	for line in lines:
+		temp = line.split("=")
+		configHashMap[temp[0]]=temp[1] 
 
-    subIdList = configHashMap['subjectId'].split(',')    
-    resIdList = configHashMap['resourceId'].split(',')
-    uniqueIdList = configHashMap['uniqueId'].split(',')
-    waitTimeList = configHashMap['waitTime'].split(",")
-    actionList = configHashMap['action'].split(",")
-    
-    if 'conflict' in configHashMap:
-        configHashMap['conflict'] = True
-    else:
-        configHashMap['conflict'] = False
+	subIdList = configHashMap['subjectId'].split(',')	
+	resIdList = configHashMap['resourceId'].split(',')
+	uniqueIdList = configHashMap['uniqueId'].split(',')
+	waitTimeList = configHashMap['waitTime'].split(",")
+	actionList = configHashMap['action'].split(",")
+	
+	if 'conflict' in configHashMap:
+		configHashMap['conflict'] = True
+	else:
+		configHashMap['conflict'] = False
 
-    configHashMap['subjectId']=subIdList
-    configHashMap['resourceId']=resIdList
-    configHashMap['uniqueId']=uniqueIdList
-    configHashMap['waitTime']=waitTimeList
-    configHashMap['action']=actionList
-    return configHashMap
+	configHashMap['subjectId']=subIdList
+	configHashMap['resourceId']=resIdList
+	configHashMap['uniqueId']=uniqueIdList
+	configHashMap['waitTime']=waitTimeList
+	configHashMap['action']=actionList
+	return configHashMap
 
-def initDB(dbFile):
-	#print("DBfile:",dbFile)
-	tree = ET.parse(dbFile)
-	root = tree.getroot()
-	for subj in root.iter('subject'):
-		temp = {}
-		for attrName, attrValue in subj.items():
-			if attrName != 'id':
-				temp[attrName] = attrValue
-		database[subj.attrib['id']] = temp
-
-	for res in root.iter('resource'):
-		temp = {}
-		for attrName, attrValue in res.items():
-			if attrName != 'id':
-				temp[attrName] = attrValue
-		database[res.attrib['id']] = temp
-	return database	
 
 class AppRequest():
-    def __init__(self, subId, resId, waitTime, action, clientProcId):
-        self.subId = subId
-        self.resId = resId
-        self.subCoId = None
-        self.resCoId = None
-        self.waitTime = waitTime
-        self.action = action
-        self.clientId = clientProcId
-        self.uniqueId = uuid.uuid4().hex
-        self.isTentative = False
-        self.testFail = None
-        self.testConflict = False
-        self.tentativeUpdate = {}
-        self.timestamp = time.time()
-        self.tentativeTime = None
-        self.result = {}
-        self.conflict = None
-        self.subRules = {}
-        self.resRules = {}
+	def __init__(self, subId, resId, waitTime, action, clientProcId):
+		self.subId = subId
+		self.resId = resId
+		self.subCoId = None
+		self.resCoId = None
+		self.waitTime = waitTime
+		self.action = action
+		self.clientId = clientProcId
+		self.uniqueId = uuid.uuid4().hex
+		self.isTentative = False
+		self.testFail = None
+		self.testConflict = False
+		self.tentativeUpdate = {}
+		self.timestamp = time.time()
+		self.tentativeTime = None
+		self.result = {}
+		self.conflict = None
+		self.subRules = {}
+		self.resRules = {}
+
+	def __repr__(self):
+		return "<ReqObj subId:%s resId:%s>" % (self.subId, self.resId)
+
+	def __str__(self):
+		return "ReqObject subId:%s, resID:%s action:%s, timestamp:%s, clientId:%s, tentative:%s, result:%s, subRules:%s, resRules:%s" % (self.subId, self.resId,self.action,self.timestamp,self.clientId,
+				self.tentativeUpdate,self.result,self.subRules,self.resRules)
+		
 
 class DbObject():
 	def __init__(self):
 		self.reqObject=None
 		self.database={}
+
+	def __repr__(self):
+		return "<DB db:%s>" % (self.database)
+
+	def __str__(self):
+		return "Database:%s" % (self.database)

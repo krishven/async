@@ -3,7 +3,10 @@ common = import_da('common')
 import random
 import time
 import pprint
+import xml.etree.ElementTree as ET
+import logging
 
+database={}
 #configHashMap={}
 
 class DbEmulator(process):
@@ -11,11 +14,9 @@ class DbEmulator(process):
 		self.dbObj = common.DbObject()
 		self.configHashMap={}
 
-	def run():
-		#output("hello DbEmulator!",configHasHMap['dbFile'])
-
+	def run():	
 		self.configHashMap = common.readConfigFile(configFile)
-		database = common.initDB(configHashMap['dbFile'])
+		database = initDB(configHashMap['dbFile'])
 		self.dbObj.database = database
 		if('randomSeed' not in configHashMap):
 			self.configHashMap['randomSeed']=1
@@ -23,11 +24,14 @@ class DbEmulator(process):
 		await(False)
 
 	def receive(msg=('DB_READ',reqObject,), from_=srcId):
+		output("Received content in DB (DB READ) from Worker {0}:".format(srcId),reqObject,level=logging.DEBUG)
 		#output("DbEmulator: received attribute read")
 		self.dbObj.reqObject = reqObject
 		send(('DB_READ',self.dbObj,),to=srcId)
+		output("Sent content from DB (DB READ) to Worker {0}:".format(srcId),reqObject,level=logging.DEBUG)
 
 	def receive(msg=('DB_WRITE',reqObject,), from_=srcId):
+		output("Received content in DB (COMMIT) from SC {0}:".format(srcId),reqObject,level=logging.DEBUG)
 		#output("DbEmulator: received attribute write")
 		if('minDbLatency' in self.configHashMap and 'maxDbLatency' in self.configHashMap):
 			delay = random.randint(int(configHashMap['minDbLatency']),int(configHashMap['maxDbLatency']))
@@ -38,3 +42,23 @@ class DbEmulator(process):
 		self.dbObj.database[reqObject.database['id']] = temp
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(self.dbObj.database)
+
+	def initDB(dbFile):
+		#print("DBfile:",dbFile)
+		tree = ET.parse(dbFile)
+		root = tree.getroot()
+		for subj in root.iter('subject'):
+			temp = {}
+			for attrName, attrValue in subj.items():
+				if attrName != 'id':
+					temp[attrName] = attrValue
+			database[subj.attrib['id']] = temp
+
+		for res in root.iter('resource'):
+			temp = {}
+			for attrName, attrValue in res.items():
+				if attrName != 'id':
+					temp[attrName] = attrValue
+			database[res.attrib['id']] = temp
+		return database	
+

@@ -4,6 +4,7 @@ common = import_da('common')
 
 import time
 import pprint
+import logging
 
 updates = {}
 
@@ -16,19 +17,24 @@ class ResourceCoordinator(process):
 	def run():
 		#output("hello Resco!")
 		self.configHashMap = common.readConfigFile(configFile)
-		self.numWorkers = len(workerResCoMap[self.id])
+		self.numWorkers = int(configHashMap['numWorkers'])
 		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):
+		output("Received content in RC (REQUEST) from SC {0}:".format(subCoId),reqObject,level=logging.DEBUG)
 		#print("Received from SubCo:",reqObject.subCoId)
 		workerList = workerResCoMap[self.id]
+		workerId = workerList[self.count%self.numWorkers]
 		#print("W:",workerId)	
-		send(('POLICY_EVAL_REQUEST',reqObject,),to=workerList[self.count%self.numWorkers])
+		send(('POLICY_EVAL_REQUEST',reqObject,),to=workerId)
+		output("Sent content from RC (REQUEST) to Worker {0}:".format(workerId),reqObject,level=logging.DEBUG)
 		self.count+=1
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=subCoId):
+		output("Received content in RC(CONFLICT CHECK) from SC {0}:".format(subCoId),reqObject,level=logging.DEBUG)
 		checkResourceConflict(reqObject)
 		send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.subCoId)
+		output("Sent content from RC (CONFLICT RESULT) to SC {0}:".format(reqObject.subCoId),reqObject,level=logging.DEBUG)
 
 	def checkResourceConflict(reqObject):
 		result = reqObject.result

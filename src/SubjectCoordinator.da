@@ -1,5 +1,6 @@
 common = import_da('common')
 dbEmulator = import_da('DbEmulator')
+import logging
 
 import time
 import uuid
@@ -26,6 +27,8 @@ class SubjectCoordinator(process):
 		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject),from_=recvProcId):
+		output("Received content in SC(REQUEST):from client {0}:".format(recvProcId),reqObject,level=logging.DEBUG)
+
 		requests[reqObject.uniqueId] = copy.deepcopy(reqObject)
 		
 		for key in tentative:
@@ -38,9 +41,11 @@ class SubjectCoordinator(process):
 
 		#print("Send to resco:",reqObject.resCoId)
 		send(('POLICY_EVAL_REQUEST',reqObject,), to=reqObject.resCoId)
+		output("Sent content from SC:(REQUEST) to RC {0}".format(reqObject.resCoId),reqObject,level=logging.DEBUG)
 
 
 	def receive(msg=('POLICY_EVAL_RESULT',reqObject,), from_=recvProcId):
+		output("Received content in SC (RESULT) from Worker {0}:".format(recvProcId),reqObject,level=logging.DEBUG)
 		#print("res is:",reqObject.result['value'])
 		if checkForConflict(reqObject) == True:
 			if reqObject.isTentative == False:
@@ -68,14 +73,20 @@ class SubjectCoordinator(process):
 
 			#send Resource conflict check msg to resource coordinator	
 			send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.resCoId)
+			output("Sent content from SC (CONFLICT CHECK) to RC {0}:".format(reqObject.resCoId),reqObject,level=logging.DEBUG)
+
 		else:
 			restartRequest(reqObject)	
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=recvProcId):
+		output("Received content in SC(CONFLICT RESULT) from RC {0}:".format(recvProcId),reqObject,level=logging.DEBUG)
+
 		if(reqObject.conflict == False):
 			commitTentativeAttr(reqObject)
 			#sending evaluation status to client
 			send((reqObject,),to=reqObject.clientId)
+			output("Sent content from SC:(RESULT)to Client {0}".format(reqObject.clientId),reqObject,level=logging.DEBUG)
+
 		else:
 			removeTentativeEntry(reqObject)
 			restartRequest(reqObject)
@@ -101,6 +112,8 @@ class SubjectCoordinator(process):
 						return
 		updateTentativeAttr(obj, obj.result)
 		send(('POLICY_CONFLICT_CHECK',obj,),to=obj.resCoId)
+		output("Sent content from SC(CONFLICT CHECK) to RC {0}:".format(obj.resCoId),obj,level=logging.DEBUG)
+
 
 	def checkForConflict(reqObject):
 		result = reqObject.result
@@ -143,6 +156,7 @@ class SubjectCoordinator(process):
 		dbObj = common.DbObject()
 		dbObj.database = commitObj
 		send(('DB_WRITE',dbObj,),to=dbId)
+		output("Sent content from SC(COMMIT) to DB:",reqObject,level=logging.DEBUG)
 		tentStatus[reqObject.uniqueId] = success
 		output('Tentative success, checking dependents')
 		if reqObject.uniqueId in tentative:
@@ -178,3 +192,4 @@ class SubjectCoordinator(process):
 		reqObject.timestamp = time.time()
 		reqObject.uniqueId = uuid.uuid4().hex
 		send(('POLICY_EVAL_REQUEST',reqObject,),to=self.id)
+		output("Sent content from SC:(REQUEST) to self",reqObject,level=logging.DEBUG)

@@ -4,6 +4,7 @@ dbEmulator = import_da('DbEmulator')
 
 import xml.etree.ElementTree as ET
 import time
+import logging
 
 result = {}
 
@@ -16,18 +17,22 @@ class Worker(process):
 		self.configHashMap = common.readConfigFile(configFile)
 		await(False)
 
-	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):	
+	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=resCoId):	
+		output("Received content in Worker (REQUEST) from RC {0}:".format(resCoId),reqObject,level=logging.DEBUG)
 		#output("Received from ResCo")
 		send(('DB_READ',reqObject,),to=dbId)
+		output("Sent content from Worker (DB READ) to DB:",reqObject,level=logging.DEBUG)
 
 	def receive(msg=('DB_READ',reqObject,), from_=subCoId):	
 		#output("Read from Db emulator" , reqObject.reqObject)
+		output("Received content in Worker (DB READ) from DB:",reqObject,level=logging.DEBUG)
 		reqObject.timestamp = time.time()
 		database = reqObject.database
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
 		time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
+		output("Sent content from Worker (RESULT) to SC {0}:".format(reqObject.subCoId),reqObject,level=logging.DEBUG)
 
 	def checkUpdate(data, attrName, attrValue):
 		if(attrValue == '++'):
