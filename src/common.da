@@ -32,8 +32,6 @@ def readConfigFile(fileName):
     configHashMap['action']=actionList
     return configHashMap
 
-
-
 def initDB(dbFile):
 	#print("DBfile:",dbFile)
 	tree = ET.parse(dbFile)

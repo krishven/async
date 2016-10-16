@@ -1,8 +1,10 @@
 common = import_da('common')
 dbEmulator = import_da('DbEmulator')
+
 import time
 import uuid
 import copy
+import pprint
 
 requests = {}
 tentative = {}
@@ -130,7 +132,9 @@ class SubjectCoordinator(process):
 			if (reqObject.subId, result['attrName']) in updates:
 				reqObject.tentativeTime = updates[(reqObject.subId, result['attrName'])]
 			updates[(reqObject.subId, result['attrName'])] = time.time()
-		output('Subject Updates',updates)
+		output('Subject Updates')
+		pp = pprint.PrettyPrinter(indent=4)
+		pp.pprint(updates)
 
 	def commitTentativeAttr(reqObject):
 		if reqObject.uniqueId not in tentative:

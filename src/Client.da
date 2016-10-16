@@ -1,6 +1,6 @@
 common = import_da('common')
-import random
 
+import random
 import time
 
 class Client(process):

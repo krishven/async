@@ -3,6 +3,7 @@ Worker = import_da('Worker')
 common = import_da('common')
 
 import time
+import pprint
 
 updates = {}
 
@@ -49,4 +50,6 @@ class ResourceCoordinator(process):
 			return
 		if result['update'] == True and result['type'] == 'resource':
 			updates[(reqObject.resId, result['attrName'])] = time.time()
-		output('Resource Updates',updates)
+		output('Resource Updates')
+		pp = pprint.PrettyPrinter(indent=4)
+		pp.pprint(updates)
