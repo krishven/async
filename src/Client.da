@@ -1,6 +1,8 @@
 common = import_da('common')
 import random
 
+import time
+
 class Client(process):
     def setup(configFile:str,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
         self.resumeFlag = False 
@@ -28,7 +30,7 @@ class Client(process):
         self.configHashMap['waitTime'] = generateRandomList('waitTime')
 
     def run():
-        output("hello Client!")
+        #output("hello Client!")
         
         #configHashMap['random']=0
         self.configHashMap = common.readConfigFile(configFile)
@@ -41,13 +43,15 @@ class Client(process):
         #print ("myid: ",self.id)
         subIdList = configHashMap['subjectId']
         resIdList = configHashMap['resourceId']
+        uniqueIdList = configHashMap['uniqueId']
         waitTimeList = configHashMap['waitTime']
         actionList = configHashMap['action']
         numClients = int(configHashMap['numClients'])
         numCoordinators = int(configHashMap['numCoordinators'])
         i=clientId[self.id]%numClients
 
-
+        #print("Length of subidlist",len(subIdList))
+        
         while(i<len(subIdList)):
             #output("Send another request")
             #print("Waititme:",waitTimeList[i])
@@ -55,11 +59,18 @@ class Client(process):
             appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
             appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
             #self.subCoId=appReq.subCoId
+            appReq.testConflict = configHashMap['conflict']
+            if uniqueIdList[i] != '0':
+                appReq.uniqueId = uniqueIdList[i]
+            if appReq.uniqueId == '1':
+                appReq.testFail = False
+            if appReq.uniqueId == '2':
+                time.sleep(2)
             send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
             await(self.resumeFlag)
             self.resumeFlag=False
             i+=numClients
         
-    def receive(msg = (result,), from_ = subCoId):
-        output("Got Response from subco:" ,result['value'])
+    def receive(msg = (reqObject,), from_ = subCoId):
+        output(reqObject.subId,reqObject.action,reqObject.resId,':', reqObject.result['value'])
         self.resumeFlag = True

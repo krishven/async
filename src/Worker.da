@@ -11,20 +11,20 @@ class Worker(process):
 		self.configHashMap={}
 
 	def run():
-		output("hello Worker!")
+		#output("hello Worker!")
 		self.configHashMap = common.readConfigFile(configFile)
 		await(False)
 
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject,), from_=subCoId):	
-		output("Received from ResCo")
+		#output("Received from ResCo")
 		send(('DB_READ',reqObject,),to=dbId)
 
 	def receive(msg=('DB_READ',reqObject,), from_=subCoId):	
-		output("Read from Db emulator" , reqObject.reqObject)
+		#output("Read from Db emulator" , reqObject.reqObject)
+		reqObject.timestamp = time.time()
 		database = reqObject.database
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
-		reqObject.timestamp = time.time()
 		time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
 
@@ -181,4 +181,5 @@ class Worker(process):
 			#if ru != None:
 				#print('resource update', ru.attrib)
 			#print()
+		output(reqObject.subId,reqObject.action,reqObject.resId,':', 'Policy evaluation result:',result['value'])
 		return result

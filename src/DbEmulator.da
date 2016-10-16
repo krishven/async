@@ -2,13 +2,15 @@ common = import_da('common')
 import random
 import time
 #configHashMap={}
+import pprint
+
 class DbEmulator(process):
 	def setup(configFile:str):
 		self.dbObj = common.DbObject()
 		self.configHashMap={}
 
 	def run():
-		output("hello DbEmulator!")
+		#output("hello DbEmulator!",configHasHMap['dbFile'])
 
 		self.configHashMap = common.readConfigFile(configFile)
 		database = common.initDB(configHashMap['dbFile'])
@@ -17,12 +19,12 @@ class DbEmulator(process):
 		await(False)
 
 	def receive(msg=('DB_READ',reqObject,), from_=srcId):
-		output("DbEmulator: received attribute read")
+		#output("DbEmulator: received attribute read")
 		self.dbObj.reqObject = reqObject
 		send(('DB_READ',self.dbObj,),to=srcId)
 
 	def receive(msg=('DB_WRITE',reqObject,), from_=srcId):
-		output("DbEmulator: received attribute write")
+		#output("DbEmulator: received attribute write")
 		if('minDbLatency' in self.configHashMap and 'maxDbLatency' in self.configHashMap):
 			delay = random.randint(int(configHashMap['minDbLatency']),int(configHashMap['maxDbLatency']))
 			Output("Latency:",delay)
@@ -30,4 +32,5 @@ class DbEmulator(process):
 		temp = self.dbObj.database[reqObject.database['id']]
 		temp[reqObject.database['attrName']] = reqObject.database['attrValue']
 		self.dbObj.database[reqObject.database['id']] = temp
-		output ("database:",self.dbObj.database)
+		pp = pprint.PrettyPrinter(indent=4)
+		pp.pprint(self.dbObj.database)

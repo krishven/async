@@ -1,0 +1,10 @@
+numCoordinators=6
+numClients=3
+subjectId=1,5,5
+resourceId=2,6,6
+waitTime=0,0,0
+uniqueId=0,0,0
+action=read,read,view
+numWorkers=1
+dbFile=database.xml
+random=0

@@ -27,7 +27,7 @@ def readConfigFile(fileName):
     return configHashMap
 
 def initDB(dbFile):
-	print("DBfile:",dbFile)
+	#print("DBfile:",dbFile)
 	tree = ET.parse(dbFile)
 	root = tree.getroot()
 	for subj in root.iter('subject'):
@@ -46,22 +46,25 @@ def initDB(dbFile):
 	return database	
 
 class AppRequest():
-    def __init__(self, subId, resId, waitTime,action,clientProcId):
+    def __init__(self, subId, resId, waitTime, action, clientProcId):
         self.subId = subId
         self.resId = resId
         self.subCoId = None
         self.resCoId = None
+        self.waitTime = waitTime
+        self.action = action
         self.clientId = clientProcId
         self.uniqueId = uuid.uuid4().hex
         self.isTentative = False
+        self.testFail = None
+        self.testConflict = False
         self.tentativeUpdate = {}
         self.timestamp = time.time()
         self.tentativeTime = None
         self.result = {}
+        self.conflict = None
         self.subRules = {}
         self.resRules = {}
-        self.waitTime = waitTime
-        self.action = action
 
 class DbObject():
 	def __init__(self):
