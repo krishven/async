@@ -15,6 +15,8 @@ class DbEmulator(process):
 		self.configHashMap = common.readConfigFile(configFile)
 		database = common.initDB(configHashMap['dbFile'])
 		self.dbObj.database = database
+		if('randomSeed' not in configHashMap):
+			self.configHashMap['randomSeed']=1
 		random.seed(self.configHashMap['randomSeed'])
 		await(False)
 
