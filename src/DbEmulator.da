@@ -1,4 +1,6 @@
 common = import_da('common')
+import pprint
+
 class DbEmulator(process):
 	def setup(configHasHMap:dict):
 		self.dbObj = common.DbObject()
@@ -18,4 +20,5 @@ class DbEmulator(process):
 		temp = self.dbObj.database[reqObject.database['id']]
 		temp[reqObject.database['attrName']] = reqObject.database['attrValue']
 		self.dbObj.database[reqObject.database['id']] = temp
-		print ("database:",self.dbObj.database)
+		pp = pprint.PrettyPrinter(indent=4)
+		pp.pprint(self.dbObj.database)

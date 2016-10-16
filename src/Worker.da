@@ -19,10 +19,10 @@ class Worker(process):
 
 	def receive(msg=('DB_READ',reqObject,), from_=subCoId):	
 		#output("Read from Db emulator" , reqObject.reqObject)
+		reqObject.timestamp = time.time()
 		database = reqObject.database
 		reqObject = reqObject.reqObject
 		reqObject.result = evaluatePolicyRequest(database,reqObject)
-		reqObject.timestamp = time.time()
 		time.sleep(int(reqObject.waitTime))
 		send(('POLICY_EVAL_RESULT',reqObject,),to=reqObject.subCoId)
 
@@ -179,5 +179,5 @@ class Worker(process):
 			#if ru != None:
 				#print('resource update', ru.attrib)
 			#print()
-		print('Policy evaluation result:',result['value'])
+		output(reqObject.subId,reqObject.action,reqObject.resId,':', 'Policy evaluation result:',result['value'])
 		return result

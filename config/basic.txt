@@ -7,4 +7,4 @@ uniqueId=0,0,0
 action=read,read,view
 numWorkers=1
 dbFile=database.xml
-random=1
+random=0

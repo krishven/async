@@ -20,7 +20,7 @@ class Client(process):
         numCoordinators = int(configHashMap['numCoordinators'])
         i=clientId[self.id]%numClients
 
-        print("Length of subidlist",len(subIdList))
+        #print("Length of subidlist",len(subIdList))
         
         while(i<len(subIdList)):
             #output("Send another request")
@@ -29,6 +29,7 @@ class Client(process):
             appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
             appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
             #self.subCoId=appReq.subCoId
+            appReq.testConflict = configHashMap['conflict']
             if uniqueIdList[i] != '0':
                 appReq.uniqueId = uniqueIdList[i]
             if appReq.uniqueId == '1':
@@ -40,6 +41,6 @@ class Client(process):
             self.resumeFlag=False
             i+=numClients
         
-    def receive(msg = (result,), from_ = subCoId):
-        output("Got Response from subco:", result['value'])
+    def receive(msg = (reqObject,), from_ = subCoId):
+        output(reqObject.subId,reqObject.action,reqObject.resId,':', reqObject.result['value'])
         self.resumeFlag = True

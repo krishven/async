@@ -52,6 +52,10 @@ def readConfigFile(fileName):
     uniqueIdList = configHashMap['uniqueId'].split(',')
     waitTimeList = configHashMap['waitTime'].split(",")
     actionList = configHashMap['action'].split(",")
+    if 'conflict' in configHashMap:
+        configHashMap['conflict'] = True
+    else:
+        configHashMap['conflict'] = False
 
     configHashMap['subjectId']=subIdList
     configHashMap['resourceId']=resIdList

@@ -36,6 +36,7 @@ class AppRequest():
         self.uniqueId = uuid.uuid4().hex
         self.isTentative = False
         self.testFail = None
+        self.testConflict = False
         self.tentativeUpdate = {}
         self.timestamp = time.time()
         self.tentativeTime = None

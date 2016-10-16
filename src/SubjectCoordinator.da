@@ -27,7 +27,7 @@ class SubjectCoordinator(process):
 		for key in tentative:
 			temp = tentative[key]
 			if temp['id'] == reqObject.subId or temp['id'] == reqObject.resId:
-				print('Read from tentative')
+				output('Read from tentative')
 				temp['used'] = False
 				reqObject.tentativeUpdate[key] = temp
 				reqObject.isTentative = True
@@ -42,22 +42,22 @@ class SubjectCoordinator(process):
 			if reqObject.isTentative == False:
 				updateTentativeAttr(reqObject, reqObject.result)
 			else:
-				print('tentative parent check')
+				output('checking for tentative parent')
 				for key in reqObject.tentativeUpdate:
 					tent = reqObject.tentativeUpdate[key]
 					if tent['used'] == True:
 						if tentStatus[key] == ongoing:
-							print('Waiting for tentative to complete')
+							output('Waiting for tentative to complete')
 							if tent['parent'] in waiting:
-								waiting[tent['parent']].append(reqObject)
+								waiting[tent['parent']].append(copy.deepcopy(reqObject))
 							else:
-								waiting[tent['parent']] = [reqObject]
+								waiting[tent['parent']] = [copy.deepcopy(reqObject)]
 							return
 						elif tentStatus[key] == success:
-							print('Parent tentative success')
+							output('Tentative parent success')
 							continue
 						else:
-							print('Parent tentative failure')
+							output('Tentative parent failed, so restarting child')
 							restartRequest(reqObject)
 							return
 				updateTentativeAttr(reqObject, reqObject.result)
@@ -71,7 +71,7 @@ class SubjectCoordinator(process):
 		if(reqObject.conflict == False):
 			commitTentativeAttr(reqObject)
 			#sending evaluation status to client
-			send((reqObject.result,),to=reqObject.clientId)
+			send((reqObject,),to=reqObject.clientId)
 		else:
 			removeTentativeEntry(reqObject)
 			restartRequest(reqObject)
@@ -82,14 +82,17 @@ class SubjectCoordinator(process):
 				tent = obj.tentativeUpdate[key]
 				if tent['used'] == True:
 					if tentStatus[key] == ongoing:
+						output('Another tentative parent still ongoing')
 						if tent['parent'] in waiting:
 							waiting[tent['parent']].append(obj)
 						else:
 							waiting[tent['parent']] = [obj]
 						return
 					elif tentStatus[key] == success:
+						output('Tentative parent success')
 						continue
 					else:
+						output('Tentative parent failed, so restarting child')
 						restartRequest(obj)
 						return
 		updateTentativeAttr(obj, obj.result)
@@ -104,7 +107,6 @@ class SubjectCoordinator(process):
 				if updateTime >= reqObject.timestamp:
 					output('Conflict in SubjectCoordinator')
 					return False
-
 		return True
 
 	def updateTentativeAttr(reqObject, result):
@@ -126,7 +128,7 @@ class SubjectCoordinator(process):
 			if (reqObject.subId, result['attrName']) in updates:
 				reqObject.tentativeTime = updates[(reqObject.subId, result['attrName'])]
 			updates[(reqObject.subId, result['attrName'])] = time.time()
-		print('Subject Updates',updates)
+		output('Subject Updates',updates)
 
 	def commitTentativeAttr(reqObject):
 		if reqObject.uniqueId not in tentative:
@@ -136,7 +138,7 @@ class SubjectCoordinator(process):
 		dbObj.database = commitObj
 		send(('DB_WRITE',dbObj,),to=dbId)
 		tentStatus[reqObject.uniqueId] = success
-		print('Tentative success, checking dependants')
+		output('Tentative success, checking dependents')
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 		if reqObject.uniqueId in waiting:
@@ -154,7 +156,7 @@ class SubjectCoordinator(process):
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 			tentStatus[reqObject.uniqueId] = failure
-		print('Tentative failure, restarting dependants')
+		output('Tentative failure, restarting dependents')
 		if reqObject.uniqueId in waiting:
 			checkWaiting(reqObject.uniqueId)
 			del waiting[reqObject.uniqueId]
@@ -162,7 +164,6 @@ class SubjectCoordinator(process):
 	def restartRequest(reqObject):
 		output("Restarting request")
 		reqObject = requests[reqObject.uniqueId]
-		print(reqObject.isTentative)
 		del requests[reqObject.uniqueId]
 		if reqObject.uniqueId == '1':
 			reqObject.waitTime = '5'
