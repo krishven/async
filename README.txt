@@ -1,21 +1,21 @@
 README:
 
 INSTRUCTIONS:
---------------
+------------
 	DISTALGO INSTALLATION
-	-----------------------
+	---------------------
 	1. Install python 3.5
 	2. Download DistAlgo-1.0.0b17 based on your OS and install it
 	3. Set distalgo bin PATH 
 	4. To confirm if its working run a sample example as "python -m da <example_pgm.da>"
 
 	HOW TO RUN PROGRAM:
-	---------------------
-	Run script.sh under src directory. In script.sh, the user can pass config file as argument. Different test cases can be tested using different config files. The logs will be stored as Logs/<config_name>.log
+	------------------
+	Run script.sh under src directory. In script.sh, the user should pass the config file as argument. Different test cases can be tested using different config files. The logs will be stored as logs/<config_name>.log
 
 
 MAIN FILES:
------------
+----------
 
 1. Master Process - <rootdir/src/main.da>   
 	This is the main process which starts all other process based on the parameters read from config file.
@@ -40,14 +40,24 @@ MAIN FILES:
 
 
 BUGS AND LIMITATIONS:
-----------------------
+--------------------
 1. We assumed that there won't be subject and resource update together for a rule.
 2. The updates are not commited in the order in which it is updated in tentative cache
 
 ASSUMPTIONS:
-------------	
+-----------
 1. The number of coordinators read from config file is equally divided for Subject Coordinator and Resource Coordinator. Incase of odd number of coordinators, the resource coordinator will be one greater than subject coordinator
 
 2. If there are multiple clients, the requests will be equally distributed in round robin fashin. For example, it there are five requests and 3 clients, then 1st client will handle 1st and 4th request, while second client will handle 2nd and 5th request and third client will handle 3rd request.
 
-3. For numnber of Workers per corrdinator parameter, we randomly assigned equal number of unique workers to each resource coordinator. 
+3. For numnber of Workers per corrdinator parameter, we randomly assigned equal number of unique workers to each resource coordinator.
+
+CONTRIBUTIONS:
+-------------
+
+Venkatakrishnan Rajagopalan:
+1. Read from database.xml and initialized the database
+2. Wrote the entire Worker co-ordinator logic including but not limited to policy evaluation after reading and interpreting conditons, evaluating and storing updates to request
+3. Wrote the Subject co-ordinator logic including but not limited to storing/updating tentative attributes, reading from tentative attributes, storing attribute updates and checking for conflicts, checking for tentative parent's status, restarting a request properly in case of conflict or parent tentative failure
+4. Resource co-ordinator conflict check logic
+5. Generated various test case scenarios and stored them in corresponding config files for reproduction
