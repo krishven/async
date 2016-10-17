@@ -35,8 +35,12 @@ MAIN FILES:
 6. Database Emulator Process - <rootdir>/src/DbEmulator.da
 	The database emulator maintains an in memory data structure to store the information received from Subject Coordinator and also send this data to Worker if any requested.
 
-7. common functions and data structure - <rootdir>/src/common.da
-	This file contains common function and common data structure which will be used by all processes	
+7. Common functions and data structure - <rootdir>/src/common.da
+	This file contains common function and common data structure which will be used by all processes.
+
+8. Rules/Policies to be evaluated - <rootdir>/config/policy.xml
+9. Database file to be read into in memory db cache - <rootdir>/src/database.xml
+10. Config files for different test cases - <rootdir>/config/*.txt
 
 
 BUGS AND LIMITATIONS:
