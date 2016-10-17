@@ -9,8 +9,9 @@ class Client(process):
 	def setup(configFile:str,subCoIdMap:dict,resCoIdMap:dict,clientId:dict): 
 		self.resumeFlag = False 
 		self.configHashMap={}
-		pass #print("poda:",subCoId)
 
+
+	#Function which generates random list based on the number of requests
 	def generateRandomList(objType):
 		randList=[]
 		i=0;
@@ -21,9 +22,10 @@ class Client(process):
 			randList.append(tempList[index])
 			i+=1
 
-		#print(randList)    
 		return randList
 
+
+	#Function to generate random list for each category	
 	def generateRandomRequests():
 		random.seed(self.configHashMap['randomSeed'])
 		self.configHashMap['subjectId'] = generateRandomList('subjectId')
@@ -33,17 +35,16 @@ class Client(process):
 		self.configHashMap['uniqueId'] = generateRandomList('uniqueId')
 
 	def run():
-		#output("hello Client!")
-		
-		#configHashMap['random']=0
+
+		#read from config file
 		self.configHashMap = common.readConfigFile(configFile)
+
+		#if random is true generate random requests
 		if('random' not in self.configHashMap):
 			self.configHashMap['random']=0
 		if(int(self.configHashMap['random'])==1):
 			generateRandomRequests()
 
-		#readConfigFile(sys.argv[1])
-		#print ("myid: ",self.id)
 		subIdList = configHashMap['subjectId']
 		resIdList = configHashMap['resourceId']
 		uniqueIdList = configHashMap['uniqueId']
@@ -51,17 +52,19 @@ class Client(process):
 		actionList = configHashMap['action']
 		numClients = int(configHashMap['numClients'])
 		numCoordinators = int(configHashMap['numCoordinators'])
+
+		#start index for each client based on ClientHashMap
 		i=clientId[self.id]%numClients
 
-		#print("Length of subidlist",len(subIdList))
-		
+		#Construct request object for each request
 		while(i<len(subIdList)):
-			#output("Send another request")
-			#print("Waititme:",waitTimeList[i])
+
+
 			appReq = common.AppRequest(subIdList[i],resIdList[i],waitTimeList[i],actionList[i],self.id)
+			
+			#get subject and resource coordinator based on subjectId and resourceId Map
 			appReq.subCoId = subCoIdMap[int(subIdList[i]) % (numCoordinators/2)]
 			appReq.resCoId = resCoIdMap[int(resIdList[i]) % (numCoordinators - numCoordinators/2)]
-			#self.subCoId=appReq.subCoId
 
 			if 'conflict' in configHashMap:
 				appReq.testConflict = True
@@ -74,12 +77,15 @@ class Client(process):
 				appReq.testFail = False
 			if appReq.uniqueId == '2':
 				time.sleep(2)
+
+			#send policy evaluation request to Subject Coordinator	
 			send(('POLICY_EVAL_REQUEST',appReq,),to=appReq.subCoId)
 			output("Sent content from Client (REQUEST) to SC {0}:".format(appReq.subCoId),str(appReq),level=logging.DEBUG)
 			await(self.resumeFlag)
 			self.resumeFlag=False
 			i+=numClients
 		
+	#wait for response from Subject Coordinator	
 	def receive(msg = (reqObject,), from_ = subCoId):
 		output(reqObject.subId,reqObject.action,reqObject.resId,':', reqObject.result['value'])
 		self.resumeFlag = True

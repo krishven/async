@@ -3,12 +3,15 @@ import uuid
 
 configHashMap={}
 
+#Function to read config file and store it in HashMap
 def readConfigFile(fileName):
 	with open(fileName) as f:
 			lines = f.read().splitlines()
 	for line in lines:
 		temp = line.split("=")
 		configHashMap[temp[0]]=temp[1] 
+
+	#The following fields will be comma separated , split the fields based on comma and add to list 
 
 	subIdList = configHashMap['subjectId'].split(',')	
 	resIdList = configHashMap['resourceId'].split(',')
@@ -23,6 +26,8 @@ def readConfigFile(fileName):
 	configHashMap['action']=actionList
 	return configHashMap
 
+
+#App Request Object Class
 class AppRequest():
 	def __init__(self, subId, resId, waitTime, action, clientProcId):
 		self.subId = subId
@@ -52,6 +57,7 @@ class AppRequest():
 				self.tentativeUpdate,self.result,self.subRules,self.resRules)
 		
 
+#Database Object Class
 class DbObject():
 	def __init__(self):
 		self.reqObject=None
