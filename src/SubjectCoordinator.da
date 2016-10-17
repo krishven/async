@@ -7,12 +7,18 @@ import uuid
 import copy
 import pprint
 
+#stores all original requests indexed by unique id
 requests = {}
+#stores all tentative updates indexed by unique id
 tentative = {}
+#stores status of all tentative updates indexed by unique id
 tentStatus = {}
+#stores all updated subject attributes for conlfict check
 updates = {}
+#stores all requests that are waiting for tentative parent
 waiting = {}
 
+#possible status of tentative updates
 ongoing = 1
 success = 2
 failure = 3
@@ -29,8 +35,10 @@ class SubjectCoordinator(process):
 	def receive(msg=('POLICY_EVAL_REQUEST',reqObject),from_=recvProcId):
 		output("Received content in SC(REQUEST):from client {0}:".format(recvProcId),reqObject,level=logging.DEBUG)
 
+		#store a copy of the original request for restarting later
 		requests[reqObject.uniqueId] = copy.deepcopy(reqObject)
 		
+		#loop through tentative to find if any updates relating to subject or resource id in request
 		for key in tentative:
 			temp = tentative[key]
 			if temp['id'] == reqObject.subId or temp['id'] == reqObject.resId:
@@ -39,16 +47,18 @@ class SubjectCoordinator(process):
 				reqObject.tentativeUpdate[key] = temp
 				reqObject.isTentative = True
 
-		#print("Send to resco:",reqObject.resCoId)
+		#send to RC for policy evaluation
 		send(('POLICY_EVAL_REQUEST',reqObject,), to=reqObject.resCoId)
 		output("Sent content from SC:(REQUEST) to RC {0}".format(reqObject.resCoId),reqObject,level=logging.DEBUG)
 
 
 	def receive(msg=('POLICY_EVAL_RESULT',reqObject,), from_=recvProcId):
 		output("Received content in SC (RESULT) from Worker {0}:".format(recvProcId),reqObject,level=logging.DEBUG)
-		#print("res is:",reqObject.result['value'])
+		
+		#check for conflict
 		if checkForConflict(reqObject) == True:
 			output('No conflict in SC')
+			#if no conflict, check for usage of any tentative updates
 			if reqObject.isTentative == False:
 				updateTentativeAttr(reqObject, reqObject.result)
 			else:
@@ -58,41 +68,47 @@ class SubjectCoordinator(process):
 					if tent['used'] == True:
 						if tentStatus[key] == ongoing:
 							output('Waiting for tentative to complete')
+							#waiting for tentative parent, stash and continue
 							if tent['parent'] in waiting:
 								waiting[tent['parent']].append(copy.deepcopy(reqObject))
 							else:
 								waiting[tent['parent']] = [copy.deepcopy(reqObject)]
 							return
 						elif tentStatus[key] == success:
+							#this parent succeeded, check for other tentative parents
 							output('Tentative parent success')
 							continue
 						else:
+							#one tentative parent failed, restart the request
 							output('Tentative parent failed, so restarting child')
 							restartRequest(reqObject)
 							return
 				updateTentativeAttr(reqObject, reqObject.result)
 
-			#send Resource conflict check msg to resource coordinator	
+			#send to RC for conflict check
 			send(('POLICY_CONFLICT_CHECK',reqObject,),to=reqObject.resCoId)
 			output("Sent content from SC (CONFLICT CHECK) to RC {0}:".format(reqObject.resCoId),reqObject,level=logging.DEBUG)
-
 		else:
+			#if conflict, restart request
 			restartRequest(reqObject)	
 
 	def receive(msg=('POLICY_CONFLICT_CHECK',reqObject,), from_=recvProcId):
 		output("Received content in SC(CONFLICT RESULT) from RC {0}:".format(recvProcId),reqObject,level=logging.DEBUG)
 
 		if(reqObject.conflict == False):
+			#if no conflict in RC too, commit
 			commitTentativeAttr(reqObject)
-			#sending evaluation status to client
+			#send evaluation status to client
 			send((reqObject,),to=reqObject.clientId)
 			output("Sent content from SC:(RESULT)to Client {0}".format(reqObject.clientId),reqObject,level=logging.DEBUG)
 
 		else:
+			#if conflict in RC, remove tentative entry and restart request
 			removeTentativeEntry(reqObject)
 			restartRequest(reqObject)
 
 	def checkWaiting(uid):
+		#function to check all waiting requests that depend on this tentative update
 		for obj in waiting[uid]:
 			for key in obj.tentativeUpdate:
 				tent = obj.tentativeUpdate[key]
@@ -117,7 +133,6 @@ class SubjectCoordinator(process):
 		send(('POLICY_CONFLICT_CHECK',obj,),to=obj.resCoId)
 		output("Sent content from SC(CONFLICT CHECK) to RC {0}:".format(obj.resCoId),obj,level=logging.DEBUG)
 
-
 	def checkForConflict(reqObject):
 		output('Checking for conflict')
 		result = reqObject.result
@@ -132,7 +147,10 @@ class SubjectCoordinator(process):
 
 	def updateTentativeAttr(reqObject, result):
 		if result['update'] == False:
+			#no update to write to tentative, return
 			return
+
+		#create new tentative entry
 		temp = {}
 		if result['type'] == 'subject':
 			temp['id'] = reqObject.subId
@@ -141,17 +159,22 @@ class SubjectCoordinator(process):
 		temp['parent'] = reqObject.uniqueId
 		temp['attrName'] = result['attrName']
 		temp['attrValue'] = result['attrValue']
+		#store new tentative entry
 		tentative[reqObject.uniqueId] = temp
+		#set status to ongoing
 		tentStatus[reqObject.uniqueId] = ongoing
 
+		#this line only for artificial delay in testing scenario
 		time.sleep(int(reqObject.waitTime))
+
+		#record change of time in subject attribute for conflict check
 		if result['update'] == True and result['type'] == 'subject':
 			if (reqObject.subId, result['attrName']) in updates:
 				reqObject.tentativeTime = updates[(reqObject.subId, result['attrName'])]
 			updates[(reqObject.subId, result['attrName'])] = time.time()
 
 		output('Writing to tentative')
-		output('Subject Updates')
+		output('Subject attribute updates')
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(updates)
 
@@ -161,28 +184,38 @@ class SubjectCoordinator(process):
 		commitObj = tentative[reqObject.uniqueId]
 		dbObj = common.DbObject()
 		dbObj.database = commitObj
+
+		#set status to success, send to DB
 		tentStatus[reqObject.uniqueId] = success
 		output('Tentative success, committing to db')
 		send(('DB_WRITE',dbObj,),to=dbId)
 		output("Sent content from SC(COMMIT) to DB:",reqObject,level=logging.DEBUG)
+
+		#delete object from tentative
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
+		#chceck for dependants
 		if reqObject.uniqueId in waiting:
 			checkWaiting(reqObject.uniqueId)
 			del waiting[reqObject.uniqueId]
 
 	def	removeTentativeEntry(reqObject):
 		result = reqObject.result
+
+		#reset time in subject attribute update map
 		if result['update'] == True and result['type'] == 'subject':
 			if reqObject.tentativeTime == None:
 				del updates[(reqObject.subId, result['attrName'])]
 			else:
 				updates[(reqObject.subId, result['attrName'])] = reqObject.tentativeTime
 
+		#delete entry and set status to failure
 		if reqObject.uniqueId in tentative:
 			del tentative[reqObject.uniqueId]
 			tentStatus[reqObject.uniqueId] = failure
-		output('Tentative failure, restarting dependents')
+		output('Tentative failure')
+
+		#check for dependants
 		if reqObject.uniqueId in waiting:
 			checkWaiting(reqObject.uniqueId)
 			del waiting[reqObject.uniqueId]
@@ -191,10 +224,14 @@ class SubjectCoordinator(process):
 		output("Restarting request")
 		reqObject = requests[reqObject.uniqueId]
 		del requests[reqObject.uniqueId]
+
+		#purely for testing purposes
 		if reqObject.uniqueId == '1':
 			reqObject.waitTime = '5'
 		elif reqObject.uniqueId == '2':
 			reqObject.waitTime = '1'
+
+		#reset time and unique id
 		reqObject.timestamp = time.time()
 		reqObject.uniqueId = uuid.uuid4().hex
 		send(('POLICY_EVAL_REQUEST',reqObject,),to=self.id)
