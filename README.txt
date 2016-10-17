@@ -52,14 +52,27 @@ ASSUMPTIONS:
 
 3. For number of Workers per coordinator parameter, we randomly assigned equal number of unique workers to each resource coordinator.
 
-4. Subject IDs and Resource IDs should be integers and unique i.e no subject and resource can have the same ID.
+4. Subject IDs and Resource IDs should be integers and unique i.e subject and resource cannot have the same ID.
+
+5. Subject IDs and Resource IDs will be comma separared in config file and the number of requests is considered as length of either subject IDs or the length of resource Ids if not generating random requests.
+
+6. By default, random is false unless otherwise specified. 
 
 CONTRIBUTIONS:
 -------------
-
 Venkatakrishnan Rajagopalan:
+----------------------------
 1. Read from database.xml and initialized the database
 2. Wrote the Worker co-ordinator logic including but not limited to policy evaluation after reading and interpreting conditions, evaluating and storing updates to request
 3. Wrote the Subject co-ordinator logic including but not limited to storing/updating tentative attributes, reading from tentative attributes, storing attribute updates and checking for conflicts, checking for tentative parent's status, restarting a request properly in case of conflict or parent tentative failure
 4. Resource co-ordinator conflict check logic
 5. Generated various test case scenarios and stored them in corresponding config files for reproduction
+
+Tamilmani Manoharan:
+--------------------
+1. Handled Process creation, communication between different processes, overall setup and modularizing code
+2. Designed config file and constructing requests based on the parameters in config file. 
+3. Generating random requests based on the parameters in config file.
+4. Handled the logic of mapping subject coordinators and resource coordinators based on subjectId and resourceId
+5. Assigning workers to Resource coordinator so that Resource coordinator will communicate with only those workers
+6. Handled DB emulator proess functionalities like DB read and DB write
