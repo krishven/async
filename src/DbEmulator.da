@@ -7,7 +7,6 @@ import xml.etree.ElementTree as ET
 import logging
 
 database={}
-#configHashMap={}
 
 class DbEmulator(process):
 	def setup(configFile:str):
@@ -24,16 +23,17 @@ class DbEmulator(process):
 		await(False)
 
 	def receive(msg=('DB_READ',reqObject,), from_=srcId):
+		#DB Read request
 		output("Received content in DB (DB READ) from Worker {0}:".format(srcId),reqObject,level=logging.DEBUG)
-		#output("DbEmulator: received attribute read")
 		self.dbObj.reqObject = reqObject
 		output('Read from database')
 		send(('DB_READ',self.dbObj,),to=srcId)
 		output("Sent content from DB (DB READ) to Worker {0}:".format(srcId),reqObject,level=logging.DEBUG)
 
 	def receive(msg=('DB_WRITE',reqObject,), from_=srcId):
+		#DB Write request
 		output("Received content in DB (COMMIT) from SC {0}:".format(srcId),reqObject,level=logging.DEBUG)
-		#output("DbEmulator: received attribute write")
+		#delay if latency specified
 		if('minDbLatency' in self.configHashMap and 'maxDbLatency' in self.configHashMap):
 			delay = random.randint(int(configHashMap['minDbLatency']),int(configHashMap['maxDbLatency']))
 			output("Latency:",delay)
@@ -47,7 +47,7 @@ class DbEmulator(process):
 		output("Database:",self.dbObj.database,level=logging.DEBUG)
 
 	def initDB(dbFile):
-		#print("DBfile:",dbFile)
+		#read from database.xml and store in memory cache
 		tree = ET.parse(dbFile)
 		root = tree.getroot()
 		for subj in root.iter('subject'):
@@ -63,5 +63,4 @@ class DbEmulator(process):
 				if attrName != 'id':
 					temp[attrName] = attrValue
 			database[res.attrib['id']] = temp
-		return database	
-
+		return database
