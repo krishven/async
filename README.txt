@@ -11,8 +11,9 @@ INSTRUCTIONS:
 
 	HOW TO RUN PROGRAM:
 	------------------
-	Run script.sh under src directory. In script.sh, the user should pass the config file as argument. Different test cases can be tested using different config files. The logs will be stored as logs/<config_name>.log
+	Run "sh Makefile" to compile all the files for the first time.
 	eg: sh script.sh <config_filepath> <logname>
+	Run script.sh under src directory. In script.sh, the user should pass the config file as argument. Different test cases can be tested using different config files. The logs will be stored as logs/<logname>.log
 
 
 MAIN FILES:
