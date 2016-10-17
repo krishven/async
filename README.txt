@@ -42,22 +42,24 @@ MAIN FILES:
 BUGS AND LIMITATIONS:
 --------------------
 1. We assumed that there won't be subject and resource update together for a rule.
-2. The updates are not commited in the order in which it is updated in tentative cache
+2. The updates are not committed in the order in which it is updated in tentative cache
 
 ASSUMPTIONS:
 -----------
 1. The number of coordinators read from config file is equally divided for Subject Coordinator and Resource Coordinator. Incase of odd number of coordinators, the resource coordinator will be one greater than subject coordinator
 
-2. If there are multiple clients, the requests will be equally distributed in round robin fashin. For example, it there are five requests and 3 clients, then 1st client will handle 1st and 4th request, while second client will handle 2nd and 5th request and third client will handle 3rd request.
+2. If there are multiple clients, the requests will be equally distributed in round robin fashion. For example, it there are five requests and 3 clients, then 1st client will handle 1st and 4th request, while second client will handle 2nd and 5th request and third client will handle 3rd request.
 
-3. For numnber of Workers per corrdinator parameter, we randomly assigned equal number of unique workers to each resource coordinator.
+3. For number of Workers per coordinator parameter, we randomly assigned equal number of unique workers to each resource coordinator.
+
+4. Subject IDs and Resource IDs should be integers and unique i.e no subject and resource can have the same ID.
 
 CONTRIBUTIONS:
 -------------
 
 Venkatakrishnan Rajagopalan:
 1. Read from database.xml and initialized the database
-2. Wrote the entire Worker co-ordinator logic including but not limited to policy evaluation after reading and interpreting conditons, evaluating and storing updates to request
+2. Wrote the Worker co-ordinator logic including but not limited to policy evaluation after reading and interpreting conditions, evaluating and storing updates to request
 3. Wrote the Subject co-ordinator logic including but not limited to storing/updating tentative attributes, reading from tentative attributes, storing attribute updates and checking for conflicts, checking for tentative parent's status, restarting a request properly in case of conflict or parent tentative failure
 4. Resource co-ordinator conflict check logic
 5. Generated various test case scenarios and stored them in corresponding config files for reproduction
