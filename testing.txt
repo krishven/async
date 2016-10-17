@@ -40,7 +40,7 @@ Random test cases:
 file: config/config.txt
 
 Takes a set of ids and actions, minDbLatency, max DbLatency, generates random 
-requests and evaluates them.
+requests and evaluates them. Should Assign to right set of workers based on Resource Coordinator 
 
 Outputs should agree with the Rules defined at the beginning.
 
